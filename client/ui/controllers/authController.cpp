@@ -19,20 +19,22 @@
 
 static QString localizeDaysLeft(qint64 days) {
     qint64 lastDigit = days % 10;
+    qint64 secondToLast = (days / 10) % 10;
 
-    if (lastDigit == 1)
+    if (lastDigit == 1 && secondToLast != 1)
         return QCoreApplication::translate("DaysLocale", "%1 day left");
-    if (lastDigit == 2 || lastDigit == 3 || lastDigit == 4)
+    if ((lastDigit == 2 || lastDigit == 3 || lastDigit == 4) && secondToLast != 1)
         return QCoreApplication::translate("DaysLocale234", "%1 days left");
     return QCoreApplication::translate("DaysLocale", "%1 days left");
 }
 
 static QString localizeHoursLeft(qint64 hours) {
     qint64 lastDigit = hours % 10;
+    qint64 secondToLast = (hours / 10) % 10;
 
-    if (lastDigit == 1)
+    if (lastDigit == 1 && secondToLast != 1)
         QCoreApplication::translate("DaysLocale", "%1 hour left");
-    if (lastDigit == 2 || lastDigit == 3 || lastDigit == 4)
+    if ((lastDigit == 2 || lastDigit == 3 || lastDigit == 4) && secondToLast != 1)
         return QCoreApplication::translate("DaysLocale234", "%1 hours left");
     return QCoreApplication::translate("DaysLocale", "%1 hours left");
 }
