@@ -171,7 +171,7 @@ PageType {
               parentFlickable: fl
 
               clickedFunc: function() {
-                Qt.openUrlExternally(LanguageModel.getZloVpnSiteUrl() + "/privacy-policy")
+                Qt.openUrlExternally(LanguageModel.getZloVpnSiteUrl() + "/documents/privacy-policy-ru.pdf")
               }
             }
 
