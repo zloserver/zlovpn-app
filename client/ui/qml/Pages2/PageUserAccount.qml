@@ -198,58 +198,81 @@ PageType {
                 shouldBeWide: true
             }
 
-            RowLayout {
+            ColumnLayout {
                 Layout.fillWidth: true
+                visible: Qt.platform.os != "ios"
+
+                RowLayout {
+                    Layout.fillWidth: true
+
+                    LabelWithButtonType {
+                        Layout.fillWidth: true
+
+                        text: qsTr("Email")
+                        descriptionText: AuthController.userInfo.isValid ? AuthController.userInfo.email : qsTr("...")
+
+                        leftImageSource: "qrc:/images/controls/mail.svg"
+                        shouldBeWide: true
+                    }
+
+                    BasicButtonType {
+                        Layout.rightMargin: 16
+                        Layout.leftMargin: 16
+                        Layout.minimumWidth: 48
+                        text: qsTr("Edit")
+
+                        defaultColor: AmneziaStyle.color.transparent
+                        hoveredColor: AmneziaStyle.color.translucentWhite
+                        pressedColor: AmneziaStyle.color.sheerWhite
+                        disabledColor: AmneziaStyle.color.mutedGray
+                        textColor: AmneziaStyle.color.mutedGray
+
+                        clickedFunc: function() {
+                            PageController.goToPage(PageEnum.PageChangeEmail)
+                        }
+                    }
+                }
 
                 LabelWithButtonType {
                     Layout.fillWidth: true
 
-                    text: qsTr("Email")
-                    descriptionText: AuthController.userInfo.isValid ? AuthController.userInfo.email : qsTr("...")
+                    text: qsTr("Change password")
+                    leftImageSource: "qrc:/images/controls/password.svg"
+                    rightImageSource: "qrc:/images/controls/chevron-right.svg"
 
-                    leftImageSource: "qrc:/images/controls/mail.svg"
-                    shouldBeWide: true
+                    clickedFunction: function() {
+                        PageController.goToPage(PageEnum.PageChangePassword)
+                    }
                 }
 
-                BasicButtonType {
-                    Layout.rightMargin: 16
-                    Layout.leftMargin: 16
-                    Layout.minimumWidth: 48
-                    text: qsTr("Edit")
+                LabelWithButtonType {
+                    Layout.fillWidth: true
 
-                    defaultColor: AmneziaStyle.color.transparent
-                    hoveredColor: AmneziaStyle.color.translucentWhite
-                    pressedColor: AmneziaStyle.color.sheerWhite
-                    disabledColor: AmneziaStyle.color.mutedGray
-                    textColor: AmneziaStyle.color.mutedGray
+                    text: qsTr("Activate promocode")
+                    leftImageSource: "qrc:/images/controls/ticket.svg"
+                    rightImageSource: "qrc:/images/controls/chevron-right.svg"
 
-                    clickedFunc: function() {
-                        PageController.goToPage(PageEnum.PageChangeEmail)
+                    clickedFunction: function() {
+                        blockingPopup.open()
                     }
                 }
             }
 
-            LabelWithButtonType {
+            ColumnLayout {
                 Layout.fillWidth: true
+                visible: Qt.platform.os == "ios"
 
-                text: qsTr("Change password")
-                leftImageSource: "qrc:/images/controls/password.svg"
-                rightImageSource: "qrc:/images/controls/chevron-right.svg"
+                LabelWithButtonType {
+                    Layout.fillWidth: true
 
-                clickedFunction: function() {
-                    PageController.goToPage(PageEnum.PageChangePassword)
-                }
-            }
+                    text: qsTr("Account settings")
+                    leftImageSource: "qrc:/images/controls/settings.svg"
+                    rightImageSource: "qrc:/images/controls/chevron-right.svg"
 
-            LabelWithButtonType {
-                Layout.fillWidth: true
-
-                text: qsTr("Activate promocode")
-                leftImageSource: "qrc:/images/controls/ticket.svg"
-                rightImageSource: "qrc:/images/controls/chevron-right.svg"
-
-                clickedFunction: function() {
-                    blockingPopup.open()
+                    clickedFunction: function() {
+                        PageController.showBusyIndicator(true)
+                        AuthController.openAccountSettings()
+                    }
                 }
             }
         }
@@ -286,6 +309,7 @@ PageType {
                 Layout.leftMargin: 16
                 Layout.minimumWidth: 90
                 text: qsTr("Add")
+                visible: Qt.platform.os != "ios"
 
                 onClicked: {
                     if (AuthController.userInfo.monthsAvailableToAdd() == 0) {
@@ -312,6 +336,10 @@ PageType {
 
         function onPromocodeActivated() {
             donePopup.open()
+            PageController.showBusyIndicator(false)
+        }
+
+        function onAccountSettingsOpened() {
             PageController.showBusyIndicator(false)
         }
     }

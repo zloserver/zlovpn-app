@@ -165,26 +165,25 @@ void AuthController::refreshToken() {
     QNetworkReply *reply = amnApp->manager()->post(request, QByteArray());
 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-         QByteArray data = reply->readAll();
-         Response response = parseNetworkReply(data, *reply);
-         if (!response.isOk()) {
-             setUnauthenticated();
-             m_refreshingToken = false;
-             emit tokenRefreshFinished();
-             return;
-         }
-        
-         QJsonDocument document = QJsonDocument::fromJson(data);
-         QString token = document.object()["token"].toString();
-         m_authenticated = true;
-         setToken(token);
-        
-         emit loginSuccessfull();
-        
-         m_refreshingToken = false;
-         emit tokenRefreshFinished();
-    });
+        QByteArray data = reply->readAll();
+        Response response = parseNetworkReply(data, *reply);
+        if (!response.isOk()) {
+            setUnauthenticated();
+            m_refreshingToken = false;
+            emit tokenRefreshFinished();
+            return;
+        }
 
+        QJsonDocument document = QJsonDocument::fromJson(data);
+        QString token = document.object()["token"].toString();
+        m_authenticated = true;
+        setToken(token);
+
+        emit loginSuccessfull();
+
+        m_refreshingToken = false;
+        emit tokenRefreshFinished();
+    });
 }
 
 void AuthController::login(const QString &login, const QString &password) {
@@ -528,6 +527,36 @@ bool AuthController::isSpikeReady() { return !m_spike.isEmpty(); }
 
 QString AuthController::getSpikeUrl() { return m_spike; }
 
+void AuthController::openAccountSettings() {
+    runNetworkRequest([this]() {
+        QNetworkRequest request = createNetworkRequest(MOBILE_WEB_TOKEN, true, nullptr);
+        QNetworkReply *reply = amnApp->manager()->get(request);
+
+        connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+            QByteArray data = reply->readAll();
+            Response response = parseNetworkReply(data, *reply);
+            if (!response.isOk()) {
+                if (response.statusCode == 401) {
+                    setUnauthenticated();
+                }
+
+                emit errorOccurred(*response.errors);
+                return;
+            }
+
+            QJsonDocument document = QJsonDocument::fromJson(data);
+            QString url = document.object()["url"].toString();
+            if (!QDesktopServices::openUrl(url)) {
+                Errors errors{};
+                errors.errorMessage = tr("Failed to open account settings");
+                emit errorOccurred(errors);
+            } else {
+                emit accountSettingsOpened();
+            }
+        });
+    });
+}
+
 QNetworkRequest AuthController::createNetworkRequest(const QString &endpoint, bool needsAuthorization,
                                                      const QByteArray *array) {
     QNetworkRequest request(QUrl(m_spike + endpoint));
@@ -547,9 +576,9 @@ QNetworkRequest AuthController::createNetworkRequest(const QString &endpoint, bo
 
 void AuthController::runNetworkRequest(std::function<void()> run) {
     if (m_refreshingToken) {
-        connect(this, &AuthController::tokenRefreshFinished, this, [this, run]() {
-            run();
-        }, Qt::ConnectionType::SingleShotConnection);
+        connect(
+                this, &AuthController::tokenRefreshFinished, this, [this, run]() { run(); },
+                Qt::ConnectionType::SingleShotConnection);
     } else {
         run();
     }

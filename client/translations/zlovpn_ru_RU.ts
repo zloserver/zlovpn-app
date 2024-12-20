@@ -80,9 +80,14 @@
 <context>
     <name>AuthController</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="516"/>
+        <location filename="../ui/controllers/authController.cpp" line="517"/>
         <source>Failed to open payment page</source>
         <translation>Произошла ошибка при открытии страницы оплаты.</translation>
+    </message>
+    <message>
+        <location filename="../ui/controllers/authController.cpp" line="551"/>
+        <source>Failed to open account settings</source>
+        <translation type="unfinished">Произошла ошибка при открытии страницы настроек аккаунта.</translation>
     </message>
 </context>
 <context>
@@ -221,27 +226,27 @@
 <context>
     <name>DaysLocale</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="27"/>
+        <location filename="../ui/controllers/authController.cpp" line="28"/>
         <source>%1 days left</source>
         <translation>осталось %1 дней</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="24"/>
+        <location filename="../ui/controllers/authController.cpp" line="25"/>
         <source>%1 day left</source>
         <translation>остался %1 день</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="37"/>
+        <location filename="../ui/controllers/authController.cpp" line="39"/>
         <source>%1 hours left</source>
         <translation>осталось %1 часов</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="34"/>
+        <location filename="../ui/controllers/authController.cpp" line="36"/>
         <source>%1 hour left</source>
         <translation>остался %1 час</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="53"/>
+        <location filename="../ui/controllers/authController.cpp" line="55"/>
         <source>less than an hour left</source>
         <translation>осталось меньше часа</translation>
     </message>
@@ -249,12 +254,12 @@
 <context>
     <name>DaysLocale234</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="26"/>
+        <location filename="../ui/controllers/authController.cpp" line="27"/>
         <source>%1 days left</source>
         <translation>осталось %1 дня</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="36"/>
+        <location filename="../ui/controllers/authController.cpp" line="38"/>
         <source>%1 hours left</source>
         <translation>осталось %1 часа</translation>
     </message>
@@ -3711,28 +3716,33 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="unfinished">Имя пользователя</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="208"/>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="278"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="212"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="301"/>
         <source>...</source>
         <translation type="unfinished">...</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="235"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="239"/>
         <source>Change password</source>
         <translation type="unfinished">Сменить пароль</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="247"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="251"/>
         <source>Activate promocode</source>
         <translation>Активировать промокод</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="292"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="268"/>
+        <source>Account settings</source>
+        <translation type="unfinished">Настройки аккаунта</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="316"/>
         <source>You can&apos;t add more balance yet.</source>
         <translation>Вы еще не можете пополнить баланс</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="207"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="211"/>
         <source>Email</source>
         <translation>Почта</translation>
     </message>
@@ -3762,7 +3772,7 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="unfinished">Назад</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="218"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="222"/>
         <source>Edit</source>
         <translation>Сменить</translation>
     </message>
@@ -3775,7 +3785,7 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="vanished">Месяцев</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="277"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="300"/>
         <source>Balance</source>
         <translation>Баланс</translation>
     </message>
@@ -3784,7 +3794,7 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="vanished"> дней</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="288"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="311"/>
         <source>Add</source>
         <translation>Пополнить</translation>
     </message>

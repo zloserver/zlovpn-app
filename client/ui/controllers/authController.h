@@ -111,6 +111,8 @@ public slots:
 
     bool isSpikeReady();
     QString getSpikeUrl();
+  
+    void openAccountSettings();
 
 signals:
     void apiCompatibilityChanged();
@@ -132,6 +134,8 @@ signals:
     void promocodeActivated();
 
     void tokenRefreshFinished();
+  
+    void accountSettingsOpened();
 
 private:
     QNetworkRequest createNetworkRequest(const QString &endpoint, bool needsAuthorization = false,

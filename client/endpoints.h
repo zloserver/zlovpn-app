@@ -6,6 +6,7 @@ const QString LOGIN_ENDPOINT = "/api/v1/auth/login";
 const QString REGISTER_ENDPOINT = "/api/v1/auth/register";
 const QString REFRESH_ENDPOINT = "/api/v1/auth/refresh";
 const QString RECOVERY_ENDPOINT = "/api/v1/auth/recover";
+const QString MOBILE_WEB_TOKEN = "/api/v1/auth/mobile_web_token";
 const QString PASSWORD_CHANGE_ENDPOINT = "/api/v1/me/password";
 const QString EMAIL_CHANGE_ENDPOINT = "/api/v1/me/email";
 const QString ME_ENDPOINT = "/api/v1/me";
