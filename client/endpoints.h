@@ -23,4 +23,8 @@ const uint32_t BREAKING_HASH = 0xdeadbeef;
 const QString MAC_UPDATE_ENDPOINT = "/api/v1/updates/mac/appcast.xml";
 #endif
 
+#ifdef Q_OS_IOS
+const QString APPLE_TRANSACTION_ENDPOINT = "/api/v1/payments/apple/transaction";
+#endif
+
 #endif // ENDPOINTS_H

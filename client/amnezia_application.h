@@ -139,7 +139,9 @@ private:
     QScopedPointer<SitesController> m_sitesController;
     QScopedPointer<SystemController> m_systemController;
     QScopedPointer<AppSplitTunnelingController> m_appSplitTunnelingController;
+public:
     QSharedPointer<AuthController> m_authController;
+private:
     QScopedPointer<ScreenMarginController> m_screenMarginController;
     QScopedPointer<FirstSetupController> m_firstSetupController;
     QScopedPointer<AutoUpdateController> m_autoUpdateController;

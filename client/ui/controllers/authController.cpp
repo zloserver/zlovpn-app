@@ -15,6 +15,11 @@
 
 #include <endpoints.h>
 
+#ifdef Q_OS_IOS
+#include <AmneziaVPN-Swift.h>
+#include <StoreKitCallbacks.h>
+#endif
+
 #include "amnezia_application.h"
 
 static QString localizeDaysLeft(qint64 days) {
@@ -95,6 +100,8 @@ AuthController::AuthController(QSharedPointer<VpnConnection> vpnConnection, std:
         if (!m_updateRequired)
             refreshToken();
     });
+        
+    connect(this, &AuthController::notifyTransactionForwarder, this, &AuthController::notifyTransaction);
 
     connect(m_vpnConnection.get(), &VpnConnection::connectionStateChanged, this,
             [this](Vpn::ConnectionState state, bool getLastError) {
@@ -412,6 +419,7 @@ void AuthController::refreshUserInfo() {
             info.username = userObject["username"].toString();
             info.timeLeft = userObject["timeLeft"].toInteger();
             info.email = userObject["email"].toString();
+            info.userId = userObject.contains("id") ? userObject["id"].toInteger() : -1;
             info.isValid = true;
 
             m_userInfo = info;
@@ -557,6 +565,94 @@ void AuthController::openAccountSettings() {
     });
 }
 
+void AuthController::appleBuyMonth() {
+#ifdef Q_OS_IOS
+    if (m_userInfo.userId == -1) {
+        refreshUserInfo();
+        
+        connect(this, &AuthController::userInfoUpdated, this, [this]() {
+            if (m_userInfo.userId == -1) {
+                Errors errors{};
+                errors.errorMessage = tr("Failed to initiate payment");
+                emit errorOccurred(errors);
+            } else {
+                runAppleBuyMonth(m_userInfo.userId);
+            }
+        }, Qt::ConnectionType::SingleShotConnection);
+    } else {
+        runAppleBuyMonth(m_userInfo.userId);
+    }
+#endif
+}
+
+void AuthController::notifyTransaction(const QString &signedPayload, NotifyTransactionRequest* transactionRequest) {
+#ifdef Q_OS_IOS
+    QJsonObject body{};
+    body["signedPayload"] = signedPayload;
+
+    runNetworkRequest([this, body, transactionRequest] {
+        QJsonDocument doc{body};
+        QByteArray bytes = doc.toJson();
+        
+        QNetworkRequest request = createNetworkRequest(APPLE_TRANSACTION_ENDPOINT, true, &bytes);
+        QNetworkReply* reply = amnApp->manager()->post(request, bytes);
+        
+        connect(reply, &QNetworkReply::finished, this, [this, reply, transactionRequest]() {
+            QByteArray data = reply->readAll();
+            Response response = parseNetworkReply(data, *reply);
+            
+            if (!response.isOk()) {
+                if (response.statusCode == 401) {
+                    setUnauthenticated();
+                }
+                
+                emit transactionRequest->errorOccurred(*response.errors);
+                return;
+            }
+            
+            emit transactionRequest->complete();
+        });
+    });
+#endif
+}
+
+#ifdef Q_OS_IOS
+using CompletionCallback = void(void*, bool);
+
+static void runAppleBuyMonthCallback(AuthController* self, bool result, const char* signedPayload, void* userData, CompletionCallback* callback) {
+    if (!result) {
+        Errors errors{};
+        errors.errorMessage = self->tr("Failed to complete payment");
+        emit self->errorOccurred(errors);
+        return;
+    } else {
+        NotifyTransactionRequest* request = new NotifyTransactionRequest();
+        
+        request->connect(request, &NotifyTransactionRequest::complete, self, [self, userData, callback, request]() {
+            emit self->appleMonthBought();
+            if (callback) callback(userData, true);
+            self->refreshUserInfo();
+            delete request;
+        });
+        
+        request->connect(request, &NotifyTransactionRequest::errorOccurred, self, [self, userData, callback, request](const Errors errors) {
+            emit self->errorOccurred(errors);
+            if (callback) callback(userData, false);
+            delete request;
+        });
+        
+        emit self->notifyTransactionForwarder(QString::fromUtf8(signedPayload), request);
+    }
+}
+#endif
+
+void AuthController::runAppleBuyMonth(qint64 userId) {
+#ifdef Q_OS_IOS
+    ZloVPN::purchaseMonth(userId, this, reinterpret_cast<void*>(&runAppleBuyMonthCallback));
+#endif
+}
+
+
 QNetworkRequest AuthController::createNetworkRequest(const QString &endpoint, bool needsAuthorization,
                                                      const QByteArray *array) {
     QNetworkRequest request(QUrl(m_spike + endpoint));
@@ -593,3 +689,21 @@ Response AuthController::parseNetworkReply(QByteArray &data, QNetworkReply &repl
 
     return Response{.statusCode = httpStatus, .errors = std::nullopt};
 }
+
+#ifdef Q_OS_IOS
+void notifyTransaction(std::string signedPayload, void* userData, NotifyTransactionCallback* callback) {
+    NotifyTransactionRequest* request = new NotifyTransactionRequest();
+    
+    request->connect(request, &NotifyTransactionRequest::complete, [userData, callback, request]() {
+        if (callback) callback(userData, true);
+        delete request;
+    });
+    
+    request->connect(request, &NotifyTransactionRequest::errorOccurred, [userData, callback, request]() {
+        if (callback) callback(userData, false);
+        delete request;
+    });
+    
+    amnApp->m_authController->notifyTransaction(QString::fromStdString(signedPayload), request);
+}
+#endif

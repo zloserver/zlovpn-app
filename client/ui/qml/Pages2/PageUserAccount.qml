@@ -284,7 +284,25 @@ PageType {
         anchors.bottomMargin: 10
         anchors.right: parent.right
         anchors.left: parent.left
-
+        
+        ColumnLayout {
+            Layout.fillWidth: true
+            visible: Qt.platform.os == "ios"
+            
+            LabelWithButtonType {
+                Layout.fillWidth: true
+                
+                text: qsTr("Top-up with Apple")
+                shouldBeWide: true
+                rightImageSource: "qrc:/images/controls/chevron-right.svg"
+                
+                clickedFunction: function() {
+                    PageController.showBusyIndicator(true)
+                    AuthController.appleBuyMonth()
+                }
+            }
+        }
+        
         DividerType {}
 
         RowLayout {
@@ -340,6 +358,10 @@ PageType {
         }
 
         function onAccountSettingsOpened() {
+            PageController.showBusyIndicator(false)
+        }
+        
+        function onAppleMonthBought() {
             PageController.showBusyIndicator(false)
         }
     }

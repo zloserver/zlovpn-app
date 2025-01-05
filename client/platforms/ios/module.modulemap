@@ -1,0 +1,5 @@
+module ZloVPNCpp {
+    header "StoreKitCallbacks.h"
+
+    export *
+}

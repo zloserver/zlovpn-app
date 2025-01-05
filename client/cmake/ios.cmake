@@ -1,5 +1,5 @@
 message("Client iOS build")
-set(CMAKE_OSX_DEPLOYMENT_TARGET "14.0" CACHE STRING "" FORCE)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "15.0" CACHE STRING "" FORCE)
 set(APPLE_PROJECT_VERSION ${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR}.${CMAKE_PROJECT_VERSION_PATCH})
 
 
@@ -35,6 +35,7 @@ set(HEADERS ${HEADERS}
     ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/iosnotificationhandler.h
     ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/QtAppDelegate.h
     ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/QtAppDelegate-C-Interface.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/StoreKitCallbacks.h
 )
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/ios_controller.h PROPERTIES OBJECTIVE_CPP_HEADER TRUE)
 
@@ -47,6 +48,15 @@ set(SOURCES ${SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/QRCodeReaderBase.mm
     ${CMAKE_CURRENT_SOURCE_DIR}/platforms/ios/QtAppDelegate.mm
 )
+
+target_sources(${PROJECT} PRIVATE
+    ${CLIENT_ROOT_DIR}/platforms/ios/StoreKitPayments.swift
+    ${CLIENT_ROOT_DIR}/platforms/ios/module.modulemap)
+
+target_include_directories(${PROJECT} PRIVATE ${CLIENT_ROOT_DIR}/platforms/ios)
+
+set(SWIFT_OPTIONS "-cxx-interoperability-mode=default")
+target_compile_options(${PROJECT} PUBLIC $<$<COMPILE_LANGUAGE:Swift>:${SWIFT_OPTIONS}>)
 
 
 target_include_directories(${PROJECT} PRIVATE ${Qt6Gui_PRIVATE_INCLUDE_DIRS})

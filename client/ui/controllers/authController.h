@@ -26,6 +26,7 @@ struct UserInfo {
     Q_PROPERTY(qint64 timeLeft MEMBER timeLeft)
     Q_PROPERTY(QString localizedTimeLeft READ localizeTimeLeft)
     Q_PROPERTY(bool isValid MEMBER isValid)
+    Q_PROPERTY(qint64 userId MEMBER userId)
 
 public slots:
     QString localizeTimeLeft() const;
@@ -39,6 +40,7 @@ public:
     QString username;
     QString email;
     qint64 timeLeft;
+    qint64 userId;
     bool isValid{false};
 };
 
@@ -69,6 +71,17 @@ public:
 
 signals:
     void stringArrived(const QString connectionString);
+    void errorOccurred(const Errors errors);
+};
+
+class NotifyTransactionRequest : public QObject {
+    Q_OBJECT
+    
+public:
+    explicit NotifyTransactionRequest(QObject* parent = nullptr) : QObject{parent} {};
+    
+signals:
+    void complete();
     void errorOccurred(const Errors errors);
 };
 
@@ -114,6 +127,10 @@ public slots:
   
     void openAccountSettings();
 
+    void appleBuyMonth();
+
+    void notifyTransaction(const QString& signedPayload, NotifyTransactionRequest* request);
+
 signals:
     void apiCompatibilityChanged();
     void spikeErrorOccurred();
@@ -136,6 +153,10 @@ signals:
     void tokenRefreshFinished();
   
     void accountSettingsOpened();
+    
+    void appleMonthBought();
+    
+    void notifyTransactionForwarder(const QString& signedPayload, NotifyTransactionRequest* request);
 
 private:
     QNetworkRequest createNetworkRequest(const QString &endpoint, bool needsAuthorization = false,
@@ -145,6 +166,8 @@ private:
     void loadCachedSpike();
 
     void runNetworkRequest(std::function<void()> run);
+    
+    void runAppleBuyMonth(qint64 userId);
 
     std::shared_ptr<Settings> m_settings;
 

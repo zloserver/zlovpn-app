@@ -80,14 +80,19 @@
 <context>
     <name>AuthController</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="517"/>
+        <location filename="../ui/controllers/authController.cpp" line="525"/>
         <source>Failed to open payment page</source>
         <translation>Произошла ошибка при открытии страницы оплаты.</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="551"/>
+        <location filename="../ui/controllers/authController.cpp" line="559"/>
         <source>Failed to open account settings</source>
         <translation type="unfinished">Произошла ошибка при открытии страницы настроек аккаунта.</translation>
+    </message>
+    <message>
+        <location filename="../ui/controllers/authController.cpp" line="575"/>
+        <source>Failed to initiate payment</source>
+        <translation type="unfinished">Произошла ошибка платежа.</translation>
     </message>
 </context>
 <context>
@@ -226,27 +231,27 @@
 <context>
     <name>DaysLocale</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="28"/>
+        <location filename="../ui/controllers/authController.cpp" line="33"/>
         <source>%1 days left</source>
         <translation>осталось %1 дней</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="25"/>
+        <location filename="../ui/controllers/authController.cpp" line="30"/>
         <source>%1 day left</source>
         <translation>остался %1 день</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="39"/>
+        <location filename="../ui/controllers/authController.cpp" line="44"/>
         <source>%1 hours left</source>
         <translation>осталось %1 часов</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="36"/>
+        <location filename="../ui/controllers/authController.cpp" line="41"/>
         <source>%1 hour left</source>
         <translation>остался %1 час</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="55"/>
+        <location filename="../ui/controllers/authController.cpp" line="60"/>
         <source>less than an hour left</source>
         <translation>осталось меньше часа</translation>
     </message>
@@ -254,12 +259,12 @@
 <context>
     <name>DaysLocale234</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="27"/>
+        <location filename="../ui/controllers/authController.cpp" line="32"/>
         <source>%1 days left</source>
         <translation>осталось %1 дня</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="38"/>
+        <location filename="../ui/controllers/authController.cpp" line="43"/>
         <source>%1 hours left</source>
         <translation>осталось %1 часа</translation>
     </message>
@@ -3706,75 +3711,85 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="vanished">Купить %1 месяцев</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="154"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="156"/>
         <source>Profile</source>
         <translation>Профиль</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="194"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="196"/>
         <source>Username</source>
         <translation type="unfinished">Имя пользователя</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="212"/>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="301"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="214"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="343"/>
         <source>...</source>
         <translation type="unfinished">...</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="239"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="241"/>
         <source>Change password</source>
         <translation type="unfinished">Сменить пароль</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="251"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="253"/>
         <source>Activate promocode</source>
         <translation>Активировать промокод</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="268"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="270"/>
         <source>Account settings</source>
         <translation type="unfinished">Настройки аккаунта</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="316"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="320"/>
+        <source>Refund</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="358"/>
         <source>You can&apos;t add more balance yet.</source>
         <translation>Вы еще не можете пополнить баланс</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="211"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="213"/>
         <source>Email</source>
         <translation>Почта</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="52"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="54"/>
         <source>Enter Promocode</source>
         <translation>Введите промокод</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="71"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="73"/>
         <source>Activate</source>
         <translation>Активировать</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="116"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="118"/>
         <source>Promocode activated</source>
         <translation>Промокод активирован</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="125"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="127"/>
         <source>The promocode was successfully activated.</source>
         <translation>Промокод был успешно активирован.</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="132"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="134"/>
         <source>Go back</source>
         <translation type="unfinished">Назад</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="222"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="224"/>
         <source>Edit</source>
         <translation>Сменить</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="297"/>
+        <source>Top-up with Apple</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Add Balance</source>
@@ -3785,7 +3800,7 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="vanished">Месяцев</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="300"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="342"/>
         <source>Balance</source>
         <translation>Баланс</translation>
     </message>
@@ -3794,7 +3809,7 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
         <translation type="vanished"> дней</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="311"/>
+        <location filename="../ui/qml/Pages2/PageUserAccount.qml" line="353"/>
         <source>Add</source>
         <translation>Пополнить</translation>
     </message>
