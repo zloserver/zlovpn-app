@@ -58,6 +58,7 @@ var pendingTransactions: [Transaction] = []
 @_cdecl("transactionCallback") public func transactionCallback(userData: UnsafeMutableRawPointer?, complete: Bool) -> Void {
     if (complete) {
         let transaction: Transaction = userData!.load(as: Transaction.self)
+        pendingTransactions.removeAll(where: { $0.id == transaction.id })
         print("Verifying \(transaction)")
         Task {
             await transaction.finish()

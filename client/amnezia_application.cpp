@@ -143,8 +143,6 @@ void AmneziaApplication::init() {
 #endif
 
 #ifdef Q_OS_IOS
-    ZloVPN::createStoreKitListener();
-    
     IosController::Instance()->initialize();
     connect(IosController::Instance(), &IosController::importConfigFromOutside, [this](QString data) {
         m_pageController->goToPageHome();

@@ -154,6 +154,13 @@ void AuthController::setToken(const QString &token) {
     if (m_authenticated) {
         refreshUserInfo();
         refreshServers();
+        
+#ifdef Q_OS_IOS
+        if (!m_storeKitListening) {
+            ZloVPN::createStoreKitListener();
+            m_storeKitListening = true;
+        }
+#endif
     }
 
     emit tokenUpdated(authenticationStateChanged);

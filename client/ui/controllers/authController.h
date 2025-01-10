@@ -183,6 +183,10 @@ private:
     bool m_spikeErrored{};
     bool m_updateRequired{};
     bool m_connected{};
+    
+#ifdef Q_OS_IOS
+    bool m_storeKitListening{};
+#endif
 };
 
 #endif // AUTHCONTROLLER_H
