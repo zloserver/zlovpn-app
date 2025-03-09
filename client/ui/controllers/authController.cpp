@@ -110,25 +110,30 @@ AuthController::AuthController(QSharedPointer<VpnConnection> vpnConnection, std:
 
     m_token = m_settings->getUserToken();
 
-    auto &cactus = ICactus::GetInstance();
-    cactus.Spike(
-            this,
-            [this](QString spike) {
-                m_settings->setSpike(spike);
-                m_spike = spike;
-                m_spikeErrored = false;
-                emit spikeUpdated();
-                checkApiCompatibility();
-            },
-            [this]() {
-                if (m_vpnConnection->connectionState() == Vpn::ConnectionState::Connected || m_connected) {
-                    loadCachedSpike();
-                } else {
-                    m_spikeErrored = true;
-                    emit spikeUpdated();
-                    emit spikeErrorOccurred();
-                }
-            });
+    m_spike = QStringLiteral("https://zlovpn.com");
+    m_settings->setSpike(m_spike);
+    m_spikeErrored = false;
+    emit spikeUpdated();
+    checkApiCompatibility();
+    // auto &cactus = ICactus::GetInstance();
+    // cactus.Spike(
+    //         this,
+    //         [this](QString spike) {
+    //             m_settings->setSpike(spike);
+    //             m_spike = spike;
+    //             m_spikeErrored = false;
+    //             emit spikeUpdated();
+    //             checkApiCompatibility();
+    //         },
+    //         [this]() {
+    //             if (m_vpnConnection->connectionState() == Vpn::ConnectionState::Connected || m_connected) {
+    //                 loadCachedSpike();
+    //             } else {
+    //                 m_spikeErrored = true;
+    //                 emit spikeUpdated();
+    //                 emit spikeErrorOccurred();
+    //             }
+    //         });
 }
 
 void AuthController::loadCachedSpike() {
