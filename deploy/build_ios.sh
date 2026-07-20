@@ -32,7 +32,11 @@ cmake --version
 clang -v
 
 # Generate XCodeProj
-$QT_BIN_DIR/qt-cmake . -B $BUILD_DIR -GXcode -DQT_HOST_PATH=$QT_MACOS_ROOT_DIR
+"$QT_BIN_DIR/qt-cmake" . \
+    -B "$BUILD_DIR" \
+    -G Xcode \
+    -DQT_HOST_PATH="$QT_MACOS_ROOT_DIR" \
+    -DCMAKE_AUTOMOC_COMPILER_PREDEFINES=OFF
 
 KEYCHAIN=amnezia.build.ios.keychain
 KEYCHAIN_FILE=$HOME/Library/Keychains/${KEYCHAIN}-db
