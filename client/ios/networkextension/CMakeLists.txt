@@ -31,7 +31,7 @@ set_target_properties(networkextension PROPERTIES
     XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY[variant=Debug] "Apple Development"
 
     XCODE_ATTRIBUTE_CODE_SIGN_STYLE Manual
-    XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "ZloVPN network extension distribution"
+    XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER "Zlovpn old ne distribution"
     XCODE_ATTRIBUTE_PROVISIONING_PROFILE_SPECIFIER[variant=Debug] "ZloVPN network extension"
 )
 

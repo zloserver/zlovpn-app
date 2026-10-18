@@ -5,9 +5,9 @@
 	<key>provisioningProfiles</key>
 	<dict>
 		<key>com.zloserver.vpn.network-extension</key>
-		<string>ZloVPN network extension distribution</string>
+		<string>Zlovpn old ne distribution</string>
 		<key>com.zloserver.vpn</key>
-		<string>ZloVPN distribution</string>
+		<string>Zlovpn old distribution</string>
 	</dict>
 	<key>signingStyle</key>
 	<string>manual</string>
