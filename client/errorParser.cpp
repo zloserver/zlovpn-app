@@ -7,9 +7,30 @@
 
 #include "amnezia_application.h"
 
-Errors ErrorParser::parse(QByteArray body, bool isFormError) {
+static Errors::Kind kindOf(int statusCode) {
+  if (statusCode == 0)
+    return Errors::Kind::Network;
+  if (statusCode == 401)
+    return Errors::Kind::Unauthorized;
+  if (statusCode >= 500)
+    return Errors::Kind::Server;
+  return Errors::Kind::Business;
+}
+
+Errors ErrorParser::parse(QByteArray body, int statusCode, bool isFormError) {
   Errors err{};
   err.isFormError = isFormError;
+  err.statusCode = statusCode;
+  err.kind = kindOf(statusCode);
+
+  if (err.kind == Errors::Kind::Network) {
+    err.errorMessage = QCoreApplication::translate("ServerLocale", "No connection to the ZloVPN server");
+    return err;
+  }
+  if (err.kind == Errors::Kind::Server) {
+    err.errorMessage = QCoreApplication::translate("ServerLocale", "The ZloVPN server is temporarily unavailable");
+    return err;
+  }
 
   QJsonDocument document = QJsonDocument::fromJson(body);
   if (document.isNull()) {
@@ -33,10 +54,10 @@ Errors ErrorParser::parse(QByteArray body, bool isFormError) {
         QString keyErrorsJoined{};
 
         for (qsizetype i = 0; i < keyErrors.size(); i++) {
-          keyErrorsJoined +=
-              jsonTranslation->translate(keyErrors[i].toString());
           if (i != 0)
             keyErrorsJoined += "\n";
+          keyErrorsJoined +=
+              jsonTranslation->translate(keyErrors[i].toString());
         }
 
         err.fieldErrors.insert(key, keyErrorsJoined);

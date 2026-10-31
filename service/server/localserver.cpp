@@ -71,9 +71,13 @@ LocalServer::LocalServer(QObject *parent) : QObject(parent), m_ipcServer(this) {
 #endif
 
 #ifdef Q_OS_MAC
-  // Signal handling for a proper shutdown.
-  QObject::connect(qApp, &QCoreApplication::aboutToQuit,
-                   []() { MacOSDaemon::instance()->deactivate(); });
+  // Signal handling for a proper shutdown. The service quits when its launcher is gone
+  // (see KeepAliveController.swift), so drop the kill switch and the xray tunnel too.
+  QObject::connect(qApp, &QCoreApplication::aboutToQuit, this, [this]() {
+    m_ipcServer.amneziaKilled();
+    m_tun2socks.stop();
+    MacOSDaemon::instance()->deactivate();
+  });
 #endif
 
 #ifdef Q_OS_WIN

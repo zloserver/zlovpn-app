@@ -6,9 +6,12 @@
 #include <QSharedPointer>
 #include <QMutex>
 #include <optional>
+#include "core/configCache.h"
 #include "errorParser.h"
 #include "settings.h"
 #include "vpnconnection.h"
+
+class ApiDiscovery;
 
 struct Response {
     int statusCode;
@@ -92,12 +95,16 @@ class AuthController : public QObject {
     Q_PROPERTY(bool spikeReady READ isSpikeReady NOTIFY spikeUpdated);
     Q_PROPERTY(bool spikeErrored MEMBER m_spikeErrored NOTIFY spikeUpdated);
     Q_PROPERTY(bool updateRequired MEMBER m_updateRequired NOTIFY apiCompatibilityChanged);
+    // the API can't be reached and the app runs on ConfigCache (docs: design.md, section 7)
+    Q_PROPERTY(bool offlineMode READ isOfflineMode NOTIFY offlineModeChanged);
+    Q_PROPERTY(QString offlineDataDate READ offlineDataDate NOTIFY offlineModeChanged);
 
 public:
     explicit AuthController(QSharedPointer<VpnConnection> vpnConnection, std::shared_ptr<Settings> settings,
                             QObject *parent = nullptr);
 
     const QList<RegionInfo> &getRegions() const { return m_regions; }
+    ConfigCache &configCache() { return m_configCache; }
 
 public slots:
     bool isAuthenticated();
@@ -114,7 +121,14 @@ public slots:
     void changeEmail(const QString &newEmail);
     void activatePromocode(const QString &promocode);
     void checkApiCompatibility();
+    void findServer();
     void logout();
+
+    bool isOfflineMode() const { return m_offlineMode; }
+    bool hasCachedServers() const { return m_configCache.hasServers(); }
+    // home screen with saved regions and configs while the API can't be reached
+    void enterOfflineMode();
+    QString offlineDataDate() const;
 
     void refreshUserInfo();
     void refreshServers();
@@ -143,6 +157,7 @@ signals:
     void passwordChanged();
     void emailChanged();
     void spikeUpdated();
+    void offlineModeChanged();
 
     void userInfoUpdated();
     void regionsUpdated();
@@ -164,6 +179,9 @@ private:
     Response parseNetworkReply(QByteArray &data, QNetworkReply &reply, bool formError = false);
 
     void loadCachedSpike();
+    // after the API check: use the stored token, refreshing it if it is getting old
+    void startSession();
+    void leaveOfflineMode();
 
     void runNetworkRequest(std::function<void()> run);
     
@@ -172,6 +190,10 @@ private:
     std::shared_ptr<Settings> m_settings;
 
     QSharedPointer<VpnConnection> m_vpnConnection;
+
+    ApiDiscovery *m_discovery{};
+    ConfigCache m_configCache;
+    bool m_offlineMode{};
 
     bool m_refreshingToken{};
 

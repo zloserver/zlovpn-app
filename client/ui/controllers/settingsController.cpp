@@ -251,6 +251,16 @@ void SettingsController::toggleKillSwitch(bool enable)
     m_settings->setKillSwitchEnabled(enable);
 }
 
+bool SettingsController::isExcludeLocalNetworksEnabled()
+{
+    return m_settings->isExcludeLocalNetworks();
+}
+
+void SettingsController::toggleExcludeLocalNetworks(bool enable)
+{
+    m_settings->setExcludeLocalNetworks(enable);
+}
+
 bool SettingsController::isNotificationPermissionGranted()
 {
 #ifdef Q_OS_ANDROID

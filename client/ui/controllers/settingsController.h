@@ -73,6 +73,9 @@ public slots:
     bool isKillSwitchEnabled();
     void toggleKillSwitch(bool enable);
 
+    bool isExcludeLocalNetworksEnabled();
+    void toggleExcludeLocalNetworks(bool enable);
+
     bool isNotificationPermissionGranted();
     void requestNotificationPermission();
 

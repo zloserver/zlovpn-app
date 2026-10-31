@@ -8,8 +8,24 @@ import ZloVPNServiceCpp
 var client: XPCClient?
 var uniqueId: UUID?
 var errorCount = 0
+var shuttingDown = false
 
-func keepaliveTimeout() {}
+// The launcher that started this service is gone or was replaced: this instance is orphaned
+// and would keep the IPC socket, routes and firewall rules, so shut it down.
+func keepaliveTimeout() {
+  if shuttingDown {
+    return
+  }
+  shuttingDown = true
+
+  requestServiceShutdown()
+
+  // in case the event loop is stuck and never gets to quit
+  DispatchQueue.global().asyncAfter(deadline: .now() + 10) {
+    logError(std.string("Service did not stop in time, exiting"))
+    exit(1)
+  }
+}
 
 public func initializeKeepalive(stdStringToken: std.string) -> Bool {
   let token = String(stdStringToken)
@@ -35,6 +51,7 @@ public func initializeKeepalive(stdStringToken: std.string) -> Bool {
 
       do {
         let response = try await client!.sendMessage(LauncherPing(), to: Routes.pingRoute)
+        errorCount = 0
         if response.uniqueId != uniqueId! {
           logError(std.string("Keepalive uniqueId mismatch, exiting..."))
           timer.cancel()
@@ -43,7 +60,7 @@ public func initializeKeepalive(stdStringToken: std.string) -> Bool {
       } catch let err {
         logError(std.string("Failed to receive keepalive: \(err.localizedDescription)"))
         errorCount += 1
-        if errorCount == 5 {
+        if errorCount >= 5 {
           logError(std.string("Request error limit exceeded, exiting..."))
           timer.cancel()
           keepaliveTimeout()

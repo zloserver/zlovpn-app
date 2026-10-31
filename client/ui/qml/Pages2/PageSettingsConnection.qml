@@ -127,6 +127,31 @@ PageType {
             }
 
             SwitcherType {
+                id: excludeLocalNetworksSwitcher
+
+                Layout.fillWidth: true
+                Layout.margins: 16
+
+                text: qsTr("Exclude local networks")
+                descriptionText: qsTr("The router, printers and other devices of your home network stay reachable while the VPN is on")
+
+                checked: SettingsController.isExcludeLocalNetworksEnabled()
+                checkable: !ConnectionController.isConnected
+                onCheckedChanged: {
+                    if (checked !== SettingsController.isExcludeLocalNetworksEnabled()) {
+                        SettingsController.toggleExcludeLocalNetworks(checked)
+                    }
+                }
+                onClicked: {
+                    if (!checkable) {
+                        PageController.showNotificationMessage(qsTr("Cannot change this setting during active connection"))
+                    }
+                }
+            }
+
+            DividerType {}
+
+            SwitcherType {
                 id: killSwitchSwitcher
                 visible: !GC.isMobile()
 

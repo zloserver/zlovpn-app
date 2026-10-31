@@ -80,17 +80,17 @@
 <context>
     <name>AuthController</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="532"/>
+        <location filename="../ui/controllers/authController.cpp" line="644"/>
         <source>Failed to open payment page</source>
         <translation>Произошла ошибка при открытии страницы оплаты.</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="566"/>
+        <location filename="../ui/controllers/authController.cpp" line="679"/>
         <source>Failed to open account settings</source>
         <translation type="unfinished">Произошла ошибка при открытии страницы настроек аккаунта.</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="583"/>
+        <location filename="../ui/controllers/authController.cpp" line="696"/>
         <source>Failed to initiate payment</source>
         <translation type="unfinished">Произошла ошибка платежа.</translation>
     </message>
@@ -106,72 +106,87 @@
 <context>
     <name>ConnectionController</name>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="257"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="351"/>
         <source>VPN Protocols is not installed.
  Please install VPN container at first</source>
         <translation>VPN-протоколы не установлены.
  Пожалуйста, установите протокол</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="135"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="211"/>
         <source>Connecting...</source>
         <translation>Подключение...</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="100"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="108"/>
         <source>Region not selected</source>
         <translation>Регион не выбран</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="116"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="150"/>
+        <source>The servers of this region are not supported by the app</source>
+        <translation>Серверы этого региона не поддерживаются приложением</translation>
+    </message>
+    <message>
+        <location filename="../ui/controllers/connectionController.cpp" line="164"/>
+        <source>No saved settings for this region</source>
+        <translation>Для этого региона нет сохранённых настроек</translation>
+    </message>
+    <message>
+        <location filename="../ui/controllers/connectionController.cpp" line="170"/>
+        <source>No connection to the ZloVPN server, connecting with saved settings</source>
+        <translation>Нет связи с сервером ZloVPN, подключаемся по сохранённым настройкам</translation>
+    </message>
+    <message>
+        <location filename="../ui/controllers/connectionController.cpp" line="192"/>
         <source>Failed to import config</source>
         <translation>Ошибка импорта конфигурации</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="141"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="224"/>
         <source>Connected</source>
         <translation>Подключено</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="165"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="249"/>
         <source>Preparing...</source>
         <translation>Подготовка...</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="188"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="280"/>
         <source>Settings updated successfully, reconnnection...</source>
         <translation>Настройки успешно обновлены, переподключение...</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="191"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="283"/>
         <source>Settings updated successfully</source>
         <translation>Настройки успешно обновлены</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="252"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="346"/>
         <source>The selected protocol is not supported on the current platform</source>
         <translation>Выбранный протокол не поддерживается на данном устройстве</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="277"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="371"/>
         <source>unable to create configuration</source>
         <translation>не удалось создать конфигурацию</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="150"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="233"/>
         <source>Reconnecting...</source>
         <translation>Переподключение...</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.h" line="95"/>
-        <location filename="../ui/controllers/connectionController.cpp" line="155"/>
-        <location filename="../ui/controllers/connectionController.cpp" line="170"/>
-        <location filename="../ui/controllers/connectionController.cpp" line="177"/>
+        <location filename="../ui/controllers/connectionController.h" line="104"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="239"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="254"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="269"/>
         <source>Connect</source>
         <translation>Подключиться</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/connectionController.cpp" line="160"/>
+        <location filename="../ui/controllers/connectionController.cpp" line="244"/>
         <source>Disconnecting...</source>
         <translation>Отключение...</translation>
     </message>
@@ -231,27 +246,27 @@
 <context>
     <name>DaysLocale</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="33"/>
+        <location filename="../ui/controllers/authController.cpp" line="39"/>
         <source>%1 days left</source>
         <translation>осталось %1 дней</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="30"/>
+        <location filename="../ui/controllers/authController.cpp" line="36"/>
         <source>%1 day left</source>
         <translation>остался %1 день</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="44"/>
+        <location filename="../ui/controllers/authController.cpp" line="50"/>
         <source>%1 hours left</source>
         <translation>осталось %1 часов</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="41"/>
+        <location filename="../ui/controllers/authController.cpp" line="47"/>
         <source>%1 hour left</source>
         <translation>остался %1 час</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="60"/>
+        <location filename="../ui/controllers/authController.cpp" line="66"/>
         <source>less than an hour left</source>
         <translation>осталось меньше часа</translation>
     </message>
@@ -259,12 +274,12 @@
 <context>
     <name>DaysLocale234</name>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="32"/>
+        <location filename="../ui/controllers/authController.cpp" line="38"/>
         <source>%1 days left</source>
         <translation>осталось %1 дня</translation>
     </message>
     <message>
-        <location filename="../ui/controllers/authController.cpp" line="43"/>
+        <location filename="../ui/controllers/authController.cpp" line="49"/>
         <source>%1 hours left</source>
         <translation>осталось %1 часа</translation>
     </message>
@@ -279,7 +294,7 @@
 <context>
     <name>FirstSetupController</name>
     <message>
-        <location filename="../core/controllers/firstSetupController.cpp" line="23"/>
+        <location filename="../core/controllers/firstSetupController.cpp" line="29"/>
         <source>To install the VPN service</source>
         <translation type="unfinished">Установить VPN сервис</translation>
     </message>
@@ -678,12 +693,12 @@ Already installed containers were found on the server. All installed containers 
         <translation>Логирование включено</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageHome.qml" line="90"/>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="99"/>
         <source>Balance: </source>
         <translation>Баланс: </translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageHome.qml" line="90"/>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="95"/>
         <source>...</source>
         <translation>...</translation>
     </message>
@@ -692,12 +707,12 @@ Already installed containers were found on the server. All installed containers 
         <translation type="vanished"> дней</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageHome.qml" line="127"/>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="166"/>
         <source>Split tunneling enabled</source>
         <translation>Раздельное туннелирование включено</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageHome.qml" line="127"/>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="166"/>
         <source>Split tunneling disabled</source>
         <translation>Раздельное туннелирование выключено</translation>
     </message>
@@ -706,12 +721,12 @@ Already installed containers were found on the server. All installed containers 
         <translation type="vanished">VPN-протокол</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageHome.qml" line="367"/>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="406"/>
         <source>Regions</source>
         <translation>Регионы</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageHome.qml" line="483"/>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="522"/>
         <source>Unable to change server while there is an active connection</source>
         <translation>Невозможно сменить сервер во время активного подключения</translation>
     </message>
@@ -722,6 +737,16 @@ Already installed containers were found on the server. All installed containers 
     <message>
         <source>Unable change server while there is an active connection</source>
         <translation type="vanished">Невозможно изменить сервер во время активного соединения</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="98"/>
+        <source>Balance on %1: %2</source>
+        <translation>Баланс на %1: %2</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageHome.qml" line="121"/>
+        <source>No connection to the ZloVPN server, using saved settings</source>
+        <translation>Нет связи с сервером ZloVPN, используем сохранённые настройки</translation>
     </message>
 </context>
 <context>
@@ -791,24 +816,34 @@ Already installed containers were found on the server. All installed containers 
         <translation type="unfinished">• Ваше приложение устарело</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="121"/>
+        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="134"/>
+        <source>Connect without the ZloVPN server</source>
+        <translation>Подключиться без связи с сервером</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="145"/>
         <source>Website</source>
         <translation type="unfinished">Веб-сайт</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="134"/>
+        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="158"/>
         <source>Telegram</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="147"/>
+        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="171"/>
         <source>Email</source>
         <translation type="unfinished">Почта</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="155"/>
+        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="179"/>
         <source>Copied</source>
         <translation type="unfinished">Скопировано</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageLookingForServer.qml" line="121"/>
+        <source>Try again</source>
+        <translation>Попробовать ещё</translation>
     </message>
 </context>
 <context>
@@ -2271,17 +2306,17 @@ Already installed containers were found on the server. All installed containers 
         <translation>Позволяет использовать VPN только для определенных приложений</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="136"/>
+        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="161"/>
         <source>KillSwitch</source>
         <translation>KillSwitch</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="137"/>
+        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="162"/>
         <source>Disables your internet if your encrypted VPN connection drops out for any reason.</source>
         <translation>Отключает ваше интернет-соединение, если ваше зашифрованное VPN-соединение по какой-либо причине прерывается.</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="148"/>
+        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="173"/>
         <source>Cannot change killSwitch settings during active connection</source>
         <translation>Невозможно изменить настройки аварийного выключателя во время активного соединения</translation>
     </message>
@@ -2308,6 +2343,21 @@ Already installed containers were found on the server. All installed containers 
     <message>
         <source>Allows you to use the VPN only for certain applications</source>
         <translation type="vanished">Позволяет использовать VPN только для определённых приложений</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="135"/>
+        <source>Exclude local networks</source>
+        <translation>Исключить локальные сети</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="136"/>
+        <source>The router, printers and other devices of your home network stay reachable while the VPN is on</source>
+        <translation>Роутер, принтер и другие устройства домашней сети доступны при включённом VPN</translation>
+    </message>
+    <message>
+        <location filename="../ui/qml/Pages2/PageSettingsConnection.qml" line="147"/>
+        <source>Cannot change this setting during active connection</source>
+        <translation>Нельзя изменить эту настройку во время подключения</translation>
     </message>
 </context>
 <context>
@@ -3661,17 +3711,17 @@ and will not be shared or disclosed to the Amnezia or any third parties</source>
 <context>
     <name>PageStart</name>
     <message>
-        <location filename="../ui/qml/Pages2/PageStart.qml" line="145"/>
+        <location filename="../ui/qml/Pages2/PageStart.qml" line="149"/>
         <source>Logging was disabled after 14 days, log files were deleted</source>
         <translation>Логирование было отключено по прошествии 14 дней, файлы логов были удалены.</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageStart.qml" line="149"/>
+        <location filename="../ui/qml/Pages2/PageStart.qml" line="153"/>
         <source>Settings restored from backup file</source>
         <translation>Настройки восстановлены из бэкап файла</translation>
     </message>
     <message>
-        <location filename="../ui/qml/Pages2/PageStart.qml" line="155"/>
+        <location filename="../ui/qml/Pages2/PageStart.qml" line="159"/>
         <source>Logging is enabled. Note that logs will be automaticallydisabled after 14 days, and all log files will be deleted.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -4870,7 +4920,17 @@ This means that AmneziaWG keeps the fast performance of the original while addin
 <context>
     <name>ServerLocale</name>
     <message>
-        <location filename="../errorParser.cpp" line="17"/>
+        <location filename="../errorParser.cpp" line="27"/>
+        <source>No connection to the ZloVPN server</source>
+        <translation>Нет связи с сервером ZloVPN</translation>
+    </message>
+    <message>
+        <location filename="../errorParser.cpp" line="31"/>
+        <source>The ZloVPN server is temporarily unavailable</source>
+        <translation>Сервер ZloVPN временно недоступен</translation>
+    </message>
+    <message>
+        <location filename="../errorParser.cpp" line="38"/>
         <source>Server error</source>
         <translation>Ошибка сервера</translation>
     </message>
@@ -5040,7 +5100,7 @@ This means that AmneziaWG keeps the fast performance of the original while addin
 <context>
     <name>VpnConnection</name>
     <message>
-        <location filename="../vpnconnection.cpp" line="386"/>
+        <location filename="../vpnconnection.cpp" line="434"/>
         <source>Mbps</source>
         <translation>Мбит/с</translation>
     </message>

@@ -5,6 +5,7 @@
 #else
 #include <QApplication>
 #endif
+#include <QTimer>
 #include <QtConcurrent>
 
 #include "core/controllers/vpnConfigurationController.h"
@@ -68,6 +69,11 @@ ConnectionController::ConnectionController(const QSharedPointer<ImportController
     });
 
     connect(m_authController.get(), &AuthController::regionsUpdated, this, [this]() {
+        // The home page asks for regions before the session is checked. Auto-connecting on those would race the
+        // token refresh with the old token (401 and a logout), so wait for regions loaded with a checked session.
+        if (!m_authController->isAuthenticated() && !m_authController->isOfflineMode())
+            return;
+
         if (m_isFirstStart && m_settings->isAutoConnect()) {
             openConnection();
         }
@@ -94,6 +100,8 @@ void ConnectionController::openConnection() {
     emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Preparing);
 
     m_serversModel->clearServers();
+    m_cachedCandidates.clear();
+    m_pendingUrl.clear();
 
     QString selectedRegionId = m_regionsModel->getSelectedRegionId();
     if (selectedRegionId.isEmpty()) {
@@ -102,29 +110,97 @@ void ConnectionController::openConnection() {
         return;
     }
 
-    ServerStringRequest *request = new ServerStringRequest;
-    connect(request, &ServerStringRequest::errorOccurred, this, [this, request](const Errors errors) {
-        emit connectionErrorOccurred(errors.errorMessage);
-        emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Error, false);
-        delete request;
-    });
-    connect(request, &ServerStringRequest::stringArrived, this, [this, request](const QString connectionString) {
-        delete request;
+    if (m_authController->isOfflineMode()) {
+        connectFromCache(selectedRegionId, false);
+        return;
+    }
 
-        bool result = m_importController->extractConfigFromData(connectionString);
-        if (!result) {
-            emit connectionErrorOccurred(tr("Failed to import config"));
-            emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Error, false);
+    m_apiAttempts = 0;
+    requestConfig(selectedRegionId);
+}
+
+void ConnectionController::requestConfig(const QString &regionId) {
+    m_apiAttempts++;
+
+    ServerStringRequest *request = new ServerStringRequest;
+    connect(request, &ServerStringRequest::errorOccurred, this, [this, request, regionId](const Errors errors) {
+        request->deleteLater();
+
+        // no answer from the API is not a reason to stay offline when we have configs that worked before
+        bool apiUnreachable = errors.kind == Errors::Kind::Network || errors.kind == Errors::Kind::Server;
+        if (apiUnreachable && !m_authController->configCache().servers(regionId).isEmpty()) {
+            connectFromCache(regionId, true);
             return;
         }
 
-        m_importController->importConfig();
+        emit connectionErrorOccurred(errors.errorMessage);
+        emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Error, false);
     });
+    connect(request, &ServerStringRequest::stringArrived, this,
+            [this, request, regionId](const QString connectionString) {
+                request->deleteLater();
 
-    m_authController->getServerConnectionString(selectedRegionId, request);
+                // the API picks a random server of the region and may pick one the Xray client can't run
+                if (!ConfigCache::isSupported(connectionString)) {
+                    qWarning() << "Unsupported server config for region" << regionId << ", attempt" << m_apiAttempts;
+                    if (m_apiAttempts < MAX_API_ATTEMPTS) {
+                        requestConfig(regionId);
+                        return;
+                    }
+                    emit connectionErrorOccurred(tr("The servers of this region are not supported by the app"));
+                    emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Error, false);
+                    return;
+                }
+
+                connectWithConfig(regionId, connectionString);
+            });
+
+    m_authController->getServerConnectionString(regionId, request);
 }
 
-void ConnectionController::closeConnection() { emit disconnectFromVpn(); }
+void ConnectionController::connectFromCache(const QString &regionId, bool announce) {
+    m_cachedCandidates = m_authController->configCache().servers(regionId);
+    if (m_cachedCandidates.isEmpty()) {
+        emit connectionErrorOccurred(tr("No saved settings for this region"));
+        emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Error, false);
+        return;
+    }
+
+    if (announce)
+        emit connectionNoticeOccurred(tr("No connection to the ZloVPN server, connecting with saved settings"));
+
+    m_cachedRegionId = regionId;
+    connectNextCachedServer();
+}
+
+bool ConnectionController::connectNextCachedServer() {
+    if (m_cachedCandidates.isEmpty())
+        return false;
+
+    ConfigCache::Server server = m_cachedCandidates.takeFirst();
+    qInfo() << "Connecting with a saved config of" << server.host << "for region" << m_cachedRegionId;
+    m_serversModel->clearServers();
+    connectWithConfig(m_cachedRegionId, server.url);
+    return true;
+}
+
+void ConnectionController::connectWithConfig(const QString &regionId, const QString &url) {
+    m_pendingRegionId = regionId;
+    m_pendingUrl = url;
+
+    if (!m_importController->extractConfigFromData(url)) {
+        emit connectionErrorOccurred(tr("Failed to import config"));
+        emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Error, false);
+        return;
+    }
+
+    m_importController->importConfig();
+}
+
+void ConnectionController::closeConnection() {
+    m_cachedCandidates.clear();
+    emit disconnectFromVpn();
+}
 
 ErrorCode ConnectionController::getLastConnectionError() { return m_vpnConnection->lastError(); }
 
@@ -135,7 +211,14 @@ void ConnectionController::onConnectionStateChanged(Vpn::ConnectionState state, 
     m_connectionStateText = tr("Connecting...");
     switch (state) {
         case Vpn::ConnectionState::Connected: {
-            amnApp->refreshManager();
+            amnApp->resetNetworkConnections();
+            // the config worked: remember it for connecting without the API
+            if (!m_pendingUrl.isEmpty()) {
+                m_authController->configCache().rememberServer(m_pendingRegionId, m_pendingUrl);
+                qInfo() << "Saved config of" << ConfigCache::hostOf(m_pendingUrl) << "for region" << m_pendingRegionId;
+                m_pendingUrl.clear();
+            }
+            m_cachedCandidates.clear();
             m_isConnectionInProgress = false;
             m_isConnected = true;
             m_connectionStateText = tr("Connected");
@@ -151,6 +234,7 @@ void ConnectionController::onConnectionStateChanged(Vpn::ConnectionState state, 
             break;
         }
         case Vpn::ConnectionState::Disconnected: {
+            amnApp->resetNetworkConnections();
             m_isConnectionInProgress = false;
             m_connectionStateText = tr("Connect");
             break;
@@ -168,6 +252,14 @@ void ConnectionController::onConnectionStateChanged(Vpn::ConnectionState state, 
         case Vpn::ConnectionState::Error: {
             m_isConnectionInProgress = false;
             m_connectionStateText = tr("Connect");
+            // a saved server of the region failed: try the next saved one before reporting
+            if (!m_cachedCandidates.isEmpty()) {
+                QTimer::singleShot(0, this, [this]() {
+                    emit m_vpnConnection->connectionStateChanged(Vpn::ConnectionState::Preparing);
+                    connectNextCachedServer();
+                });
+                break;
+            }
             if (getLastError)
                 emit connectionErrorOccurred(getLastConnectionError());
             break;
@@ -202,6 +294,8 @@ Vpn::ConnectionState ConnectionController::getCurrentConnectionState() { return 
 QString ConnectionController::connectionStateText() const { return m_connectionStateText; }
 
 void ConnectionController::toggleConnection() {
+    qInfo() << "Connect button pressed in state" << m_state << "in progress" << m_isConnectionInProgress << "offline mode"
+            << m_authController->isOfflineMode();
     if (m_state == Vpn::ConnectionState::Preparing) {
         emit preparingConfig();
         return;

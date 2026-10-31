@@ -1,8 +1,8 @@
 #include "authController.h"
 
+#include "core/api/apiDiscovery.h"
 #include "core/server_defs.h"
 
-#include <Cactus/Cactus.hpp>
 #include <QCoreApplication>
 #include <QDesktopServices>
 #include <QJsonArray>
@@ -21,6 +21,12 @@
 #endif
 
 #include "amnezia_application.h"
+
+namespace {
+    // docs: design.md, sections 4 and 5
+    constexpr int API_TIMEOUT_MS = 20000;
+    constexpr int TOKEN_REFRESH_INTERVAL_DAYS = 7;
+}
 
 static QString localizeDaysLeft(qint64 days) {
     qint64 lastDigit = days % 10;
@@ -81,7 +87,7 @@ qint64 UserInfo::monthsAvailableToAdd() const {
 
 AuthController::AuthController(QSharedPointer<VpnConnection> vpnConnection, std::shared_ptr<Settings> settings,
                                QObject *parent) :
-    QObject{parent}, m_vpnConnection(vpnConnection), m_settings(settings) {
+    QObject{parent}, m_vpnConnection(vpnConnection), m_settings(settings), m_configCache(settings) {
     connect(m_settings.get(), &Settings::settingsCleared, this, [this]() {
         m_token = "";
         m_authenticated = false;
@@ -98,7 +104,7 @@ AuthController::AuthController(QSharedPointer<VpnConnection> vpnConnection, std:
 
     connect(this, &AuthController::apiCompatibilityChanged, this, [this]() {
         if (!m_updateRequired)
-            refreshToken();
+            startSession();
     });
         
     connect(this, &AuthController::notifyTransactionForwarder, this, &AuthController::notifyTransaction);
@@ -110,26 +116,39 @@ AuthController::AuthController(QSharedPointer<VpnConnection> vpnConnection, std:
 
     m_token = m_settings->getUserToken();
 
-    auto &cactus = ICactus::GetInstance();
-    cactus.Spike(
-            this,
-            [this](QString spike) {
-                m_settings->setSpike(spike);
-                m_spike = spike;
-                m_spikeErrored = false;
-                emit spikeUpdated();
-                checkApiCompatibility();
-            },
-            [this]() {
-                if (m_vpnConnection->connectionState() == Vpn::ConnectionState::Connected || m_connected) {
-                    loadCachedSpike();
-                } else {
-                    m_spikeErrored = true;
-                    emit spikeUpdated();
-                    emit spikeErrorOccurred();
-                }
-            });
+    m_discovery = new ApiDiscovery(m_settings, this);
+    connect(m_discovery, &ApiDiscovery::stateChanged, this, [this]() {
+        if (m_discovery->state() == ApiDiscovery::State::Searching && m_spikeErrored) {
+            m_spikeErrored = false;
+            emit spikeUpdated();
+        }
+    });
+    connect(m_discovery, &ApiDiscovery::found, this, [this](const QString &baseUrl) {
+        leaveOfflineMode();
+        m_spike = baseUrl;
+        m_spikeErrored = false;
+        emit spikeUpdated();
+        checkApiCompatibility();
+    });
+    connect(m_discovery, &ApiDiscovery::failed, this, [this]() {
+        if (m_vpnConnection->connectionState() == Vpn::ConnectionState::Connected || m_connected) {
+            // the VPN already works (e.g. Android restarted the UI): show it with what we know instead of an error
+            if (hasCachedServers()) {
+                enterOfflineMode();
+            } else {
+                loadCachedSpike();
+            }
+        } else {
+            m_spikeErrored = true;
+            emit spikeUpdated();
+            emit spikeErrorOccurred();
+        }
+    });
+
+    findServer();
 }
+
+void AuthController::findServer() { m_discovery->start(); }
 
 void AuthController::loadCachedSpike() {
     m_spike = m_settings->getSpike();
@@ -169,7 +188,28 @@ void AuthController::setToken(const QString &token) {
 void AuthController::setUnauthenticated() {
     m_refreshingToken = false;
     m_authenticated = false;
+    m_settings->setUserTokenRefreshedAt(QDateTime());
+    // saved configs hold this account's VPN keys
+    m_configCache.clear();
+    leaveOfflineMode();
     setToken("");
+}
+
+void AuthController::startSession() {
+    if (!hasToken()) {
+        setUnauthenticated();
+        return;
+    }
+
+    // Every refresh replaces the token on the server, and a lost answer would leave us with a deleted one,
+    // so refresh only when the token is getting old: it lives 30 days on the server
+    const QDateTime refreshedAt = m_settings->getUserTokenRefreshedAt();
+    if (refreshedAt.isValid() && refreshedAt.addDays(TOKEN_REFRESH_INTERVAL_DAYS) > QDateTime::currentDateTimeUtc()) {
+        setToken(m_token);
+        return;
+    }
+
+    refreshToken();
 }
 
 void AuthController::refreshToken() {
@@ -180,16 +220,25 @@ void AuthController::refreshToken() {
 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         QByteArray data = reply->readAll();
+        reply->deleteLater();
         Response response = parseNetworkReply(data, *reply);
         if (!response.isOk()) {
-            setUnauthenticated();
             m_refreshingToken = false;
+            if (response.errors->kind == Errors::Kind::Unauthorized) {
+                setUnauthenticated();
+            } else {
+                // no answer or a server failure says nothing about the token: keep it and carry on,
+                // a really dead token gets 401 on the next request
+                qWarning() << "Token refresh failed with status" << response.statusCode << ", keeping the token";
+                setToken(m_token);
+            }
             emit tokenRefreshFinished();
             return;
         }
 
         QJsonDocument document = QJsonDocument::fromJson(data);
         QString token = document.object()["token"].toString();
+        m_settings->setUserTokenRefreshedAt(QDateTime::currentDateTimeUtc());
         m_authenticated = true;
         setToken(token);
 
@@ -214,6 +263,7 @@ void AuthController::login(const QString &login, const QString &password) {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 emit errorOccurred(*response.errors);
@@ -222,6 +272,7 @@ void AuthController::login(const QString &login, const QString &password) {
 
             QJsonDocument document = QJsonDocument::fromJson(data);
             QString token = document.object()["token"].toString();
+            m_settings->setUserTokenRefreshedAt(QDateTime::currentDateTimeUtc());
             setToken(token);
             m_authenticated = true;
 
@@ -243,6 +294,7 @@ void AuthController::recoverAccount(const QString &email) {
 
         connect(reply, &QNetworkReply::finished, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 emit errorOccurred(*response.errors);
@@ -268,6 +320,7 @@ void AuthController::changePassword(const QString &currentPassword, const QStrin
 
         connect(reply, &QNetworkReply::finished, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 emit errorOccurred(*response.errors);
@@ -292,6 +345,7 @@ void AuthController::changeEmail(const QString &newEmail) {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -320,6 +374,7 @@ void AuthController::activatePromocode(const QString &promocode) {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -343,6 +398,7 @@ void AuthController::checkApiCompatibility() {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
 
             if (!response.isOk()) {
@@ -382,6 +438,7 @@ void AuthController::registerUser(const QString &email, const QString &username,
 
         connect(reply, &QNetworkReply::finished, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply, true);
             if (!response.isOk()) {
                 emit errorOccurred(*response.errors);
@@ -390,6 +447,7 @@ void AuthController::registerUser(const QString &email, const QString &username,
 
             QJsonDocument document = QJsonDocument::fromJson(data);
             QString token = document.object()["token"].toString();
+            m_settings->setUserTokenRefreshedAt(QDateTime::currentDateTimeUtc());
             setToken(token);
             m_authenticated = true;
 
@@ -407,6 +465,7 @@ void AuthController::refreshUserInfo() {
 
         connect(reply, &QNetworkReply::finished, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -430,6 +489,9 @@ void AuthController::refreshUserInfo() {
             info.isValid = true;
 
             m_userInfo = info;
+            if (info.userId != -1)
+                m_configCache.setOwner(info.userId);
+            m_configCache.saveTimeLeft(info.timeLeft);
 
             emit userInfoUpdated();
         });
@@ -449,6 +511,7 @@ void AuthController::refreshServers() {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -472,10 +535,57 @@ void AuthController::refreshServers() {
             }
 
             m_regions = servers;
+            m_configCache.saveRegions(serverArray);
 
             emit regionsUpdated();
         });
     });
+}
+
+void AuthController::enterOfflineMode() {
+    if (!hasCachedServers())
+        return;
+
+    // only regions we can actually connect to without the API
+    QList<RegionInfo> regions{};
+    for (const QJsonValue &value : m_configCache.regions()) {
+        RegionInfo region = parseRegionInfo(value.toObject());
+        if (!m_configCache.servers(region.id).isEmpty())
+            regions.append(region);
+    }
+    if (regions.isEmpty())
+        return;
+
+    bool selectedRegionKnown = false;
+    for (const RegionInfo &region : regions)
+        selectedRegionKnown |= region.id == m_settings->getSelectedRegionId();
+    if (!selectedRegionKnown)
+        m_settings->setSelectedRegionId(regions.first().id);
+
+    m_userInfo = UserInfo{};
+    if (std::optional<qint64> timeLeft = m_configCache.estimatedTimeLeft()) {
+        m_userInfo.timeLeft = *timeLeft;
+        m_userInfo.isValid = true;
+    }
+    m_regions = regions;
+    m_offlineMode = true;
+
+    qInfo() << "Offline mode: the API can't be reached, using" << regions.size() << "saved regions";
+    emit offlineModeChanged();
+    emit userInfoUpdated();
+    emit regionsUpdated();
+}
+
+void AuthController::leaveOfflineMode() {
+    if (!m_offlineMode)
+        return;
+    m_offlineMode = false;
+    emit offlineModeChanged();
+}
+
+QString AuthController::offlineDataDate() const {
+    QDateTime fetchedAt = m_configCache.timeLeftFetchedAt();
+    return fetchedAt.isValid() ? fetchedAt.toLocalTime().toString("dd.MM") : QString();
 }
 
 void AuthController::getServerConnectionString(const QString &serverId, ServerStringRequest *stringRequest) {
@@ -491,6 +601,7 @@ void AuthController::getServerConnectionString(const QString &serverId, ServerSt
 
         connect(reply, &QNetworkReply::finished, stringRequest, [this, reply, stringRequest]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -515,6 +626,7 @@ void AuthController::openPaymentLink() {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -549,6 +661,7 @@ void AuthController::openAccountSettings() {
 
         connect(reply, &QNetworkReply::finished, this, [this, reply]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             if (!response.isOk()) {
                 if (response.statusCode == 401) {
@@ -606,6 +719,7 @@ void AuthController::notifyTransaction(const QString &signedPayload, NotifyTrans
         
         connect(reply, &QNetworkReply::finished, this, [this, reply, transactionRequest]() {
             QByteArray data = reply->readAll();
+            reply->deleteLater();
             Response response = parseNetworkReply(data, *reply);
             
             if (!response.isOk()) {
@@ -664,6 +778,7 @@ QNetworkRequest AuthController::createNetworkRequest(const QString &endpoint, bo
                                                      const QByteArray *array) {
     QNetworkRequest request(QUrl(m_spike + endpoint));
     request.setRawHeader("User-Agent", "ZloVpn");
+    request.setTransferTimeout(API_TIMEOUT_MS);
 
     if (needsAuthorization) {
         request.setRawHeader("Authorization", QString("Bearer " + m_token).toUtf8());
@@ -690,7 +805,8 @@ void AuthController::runNetworkRequest(std::function<void()> run) {
 Response AuthController::parseNetworkReply(QByteArray &data, QNetworkReply &reply, bool formError) {
     auto httpStatus = reply.attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
     if (reply.error() != QNetworkReply::NoError || !Response::isOk(httpStatus)) {
-        auto errors = ErrorParser::parse(data, formError);
+        // a transport error after a 2xx status line still means the answer never fully arrived
+        auto errors = ErrorParser::parse(data, Response::isOk(httpStatus) ? 0 : httpStatus, formError);
         return Response{.statusCode = httpStatus, .errors = errors};
     }
 

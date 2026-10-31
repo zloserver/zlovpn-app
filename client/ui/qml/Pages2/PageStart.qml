@@ -31,7 +31,7 @@ PageType {
             } else if (FirstSetupController.firstSetupNeeded()) {
                 tabBar.visible = false
                 tabBarStackView.goToTabBarPage(PageEnum.PageFirstSetup)
-            } else if (!AuthController.spikeReady) {
+            } else if (!AuthController.spikeReady && !AuthController.offlineMode) {
                 tabBar.visible = false
                 tabBarStackView.goToTabBarPage(PageEnum.PageLookingForServer)
             } else if (!AuthController.hasToken()) {
@@ -120,6 +120,10 @@ PageType {
             PageController.closePage()
         }
 
+        function onConnectionNoticeOccurred(message) {
+            PageController.showNotificationMessage(message)
+        }
+
         function onNoInstalledContainers() {
         }
     }
@@ -175,6 +179,10 @@ PageType {
             PageController.goToPageHome()
         }
 
+        function onOfflineModeChanged() {
+            PageController.goToPageHome()
+        }
+
         function onErrorOccurred(error) {
             if (!error.isFormError) {
                 PageController.showErrorMessage(error.errorMessage)
@@ -210,7 +218,7 @@ PageType {
             } else if (FirstSetupController.firstSetupNeeded()) {
                 tabBar.visible = false
                 pagePath = PageController.getPagePath(PageEnum.PageFirstSetup)
-            } else if (!AuthController.spikeReady) {
+            } else if (!AuthController.spikeReady && !AuthController.offlineMode) {
                 tabBar.visible = false
                 pagePath = PageController.getPagePath(PageEnum.PageLookingForServer)
             } else if (!AuthController.hasToken()) {

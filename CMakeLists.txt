@@ -42,6 +42,14 @@ set(QT_BUILD_TOOLS_WHEN_CROSS_COMPILING ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# "ZloVPN Dev" for local testing next to the installed ZloVPN: its own settings, instance check,
+# IPC socket and bundle id. On macOS run it with ZLOVPN_DEV_MANUAL_SERVICE=1 and start the service by hand.
+option(ZLOVPN_DEV_BUILD "Build ZloVPN Dev for local testing" OFF)
+if (ZLOVPN_DEV_BUILD)
+    add_compile_definitions(ZLOVPN_DEV_BUILD)
+    set(BUILD_OSX_APP_IDENTIFIER com.zloserver.vpn.dev)
+endif ()
+
 if (APPLE AND NOT IOS)
     set(CMAKE_OSX_ARCHITECTURES "x86_64")
 endif ()

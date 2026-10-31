@@ -81,7 +81,7 @@ public:
 
     QQmlApplicationEngine *qmlEngine() const;
     QNetworkAccessManager *manager() { return m_nam; }
-    void refreshManager();
+    void resetNetworkConnections();
     JsonTranslation *jsonTranslation() const { return m_jsonTranslation.get(); }
 
 signals:

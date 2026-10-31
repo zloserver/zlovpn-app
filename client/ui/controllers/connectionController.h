@@ -71,11 +71,20 @@ signals:
 
     void splitTunnelingFailed();
 
+    // something the user should know that is not an error, e.g. connecting with saved settings
+    void connectionNoticeOccurred(const QString &message);
+
 private:
     Vpn::ConnectionState getCurrentConnectionState();
     bool isProtocolConfigExists(const QJsonObject &containerConfig, const DockerContainer container);
 
     void continueConnection();
+
+    // docs: design.md, section 7
+    void requestConfig(const QString &regionId);
+    void connectFromCache(const QString &regionId, bool announce);
+    bool connectNextCachedServer();
+    void connectWithConfig(const QString &regionId, const QString &url);
 
     QSharedPointer<ImportController> m_importController;
     QSharedPointer<AuthController> m_authController;
@@ -95,6 +104,15 @@ private:
     QString m_connectionStateText = tr("Connect");
 
     Vpn::ConnectionState m_state;
+
+    static constexpr int MAX_API_ATTEMPTS = 3;
+    int m_apiAttempts = 0;
+    // the config being connected, saved to ConfigCache once the VPN is up
+    QString m_pendingRegionId;
+    QString m_pendingUrl;
+    // saved servers of m_cachedRegionId still to try
+    QString m_cachedRegionId;
+    QList<ConfigCache::Server> m_cachedCandidates;
 };
 
 #endif // CONNECTIONCONTROLLER_H

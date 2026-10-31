@@ -387,10 +387,21 @@ bool Settings::isKillSwitchEnabled() const { return value("Conf/killSwitchEnable
 
 void Settings::setKillSwitchEnabled(bool enabled) { setValue("Conf/killSwitchEnabled", enabled); }
 
+bool Settings::isExcludeLocalNetworks() const { return value("Conf/excludeLocalNetworks", false).toBool(); }
+
+void Settings::setExcludeLocalNetworks(bool enabled) { setValue("Conf/excludeLocalNetworks", enabled); }
+
 QString Settings::getUserToken() { return value("User/token", "").toString(); }
 
 void Settings::setUserToken(QString token) {
     setValue("User/token", token);
+    m_settings.sync();
+}
+
+QDateTime Settings::getUserTokenRefreshedAt() { return value("User/tokenRefreshedAt").toDateTime(); }
+
+void Settings::setUserTokenRefreshedAt(const QDateTime &time) {
+    setValue("User/tokenRefreshedAt", time);
     m_settings.sync();
 }
 
@@ -401,6 +412,10 @@ void Settings::setSelectedRegionId(QString id) { setValue("User/selectedRegion",
 QString Settings::getSpike() { return value("User/spike", "").toString(); }
 
 void Settings::setSpike(QString spike) { setValue("User/spike", spike); }
+
+QByteArray Settings::getConfigCache() { return value("User/configCache").toByteArray(); }
+
+void Settings::setConfigCache(const QByteArray &cache) { setValue("User/configCache", cache); }
 
 QString Settings::getInstallationUuid(const bool needCreate) {
     auto uuid = value("Conf/installationUuid", "").toString();

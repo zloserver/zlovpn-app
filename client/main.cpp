@@ -18,7 +18,7 @@
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 bool isAnotherInstanceRunning() {
     QLocalSocket socket;
-    socket.connectToServer("ZloVPNInstance");
+    socket.connectToServer(APPLICATION_NAME "Instance");
     if (socket.waitForConnected(500)) {
         qWarning() << "ZloVPN is already running";
         return true;

@@ -6,7 +6,11 @@
 
 #include "../client/utilities.h"
 
+#ifdef ZLOVPN_DEV_BUILD
+#define IPC_SERVICE_URL "local:ZloVpnDevIpcInterface"
+#else
 #define IPC_SERVICE_URL "local:ZloVpnIpcInterface"
+#endif
 
 namespace amnezia {
 

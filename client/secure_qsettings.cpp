@@ -16,8 +16,15 @@
 using namespace QKeychain;
 
 SecureQSettings::SecureQSettings(const QString &organization, const QString &application, QObject *parent)
-    : QObject { parent }, m_settings(organization, application, parent), encryptedKeys({ "Servers/serversList" })
+    : QObject { parent }, m_settings(organization, application, parent), encryptedKeys({ "Servers/serversList", "User/configCache" })
 {
+    // Read the keychain once, before any network reply can arrive: getSecTag() waits in a nested event loop, and a reply
+    // handled inside it that touches the settings deadlocks on the mutex held by the caller (froze the app on iOS)
+    if (encryptionRequired()) {
+        getEncKey();
+        getEncIv();
+    }
+
     bool encrypted = m_settings.value("Conf/encrypted").toBool();
 
     // convert settings to encrypted for if updated to >= 2.1.0
@@ -201,11 +208,18 @@ bool SecureQSettings::encryptionRequired() const
     // QtKeyChain failing on Linux
     return false;
 #endif
+#ifdef ZLOVPN_DEV_BUILD
+    // Unsigned local builds would wait for a keychain prompt (and reach for the installed app's key): store plainly
+    return false;
+#endif
     return true;
 }
 
 QByteArray SecureQSettings::getEncKey() const
 {
+    if (!m_key.isEmpty())
+        return m_key;
+
     // load keys from system key storage
     m_key = getSecTag(settingsKeyTag);
 
@@ -232,6 +246,9 @@ QByteArray SecureQSettings::getEncKey() const
 
 QByteArray SecureQSettings::getEncIv() const
 {
+    if (!m_iv.isEmpty())
+        return m_iv;
+
     // load keys from system key storage
     m_iv = getSecTag(settingsIvTag);
 

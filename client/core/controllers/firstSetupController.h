@@ -10,6 +10,9 @@ class FirstSetupController : public QObject {
 public:
   explicit FirstSetupController(QObject *parent = nullptr);
 
+  // Asks the launcher to (re)start the VPN service, returns false if it failed
+  static bool startService();
+
 public slots:
   bool firstSetupNeeded();
   void doFirstSetup();

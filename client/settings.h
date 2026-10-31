@@ -1,6 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#include <QDateTime>
 #include <QObject>
 #include <QSettings>
 #include <QString>
@@ -147,6 +148,10 @@ public:
 
     bool isKillSwitchEnabled() const;
     void setKillSwitchEnabled(bool enabled);
+
+    // "Exclude local networks" (docs: design.md, section 8)
+    bool isExcludeLocalNetworks() const;
+    void setExcludeLocalNetworks(bool enabled);
     QString getInstallationUuid(const bool needCreate);
 
     void resetGatewayEndpoint();
@@ -158,11 +163,18 @@ public:
 
     QString getUserToken();
     void setUserToken(QString token);
+    // when the server last issued the token (login, registration or refresh); invalid if unknown
+    QDateTime getUserTokenRefreshedAt();
+    void setUserTokenRefreshedAt(const QDateTime &time);
     QString getSelectedRegionId();
     void setSelectedRegionId(QString id);
 
     QString getSpike();
     void setSpike(QString spike);
+
+    // ConfigCache storage, encrypted: holds the user's VPN keys
+    QByteArray getConfigCache();
+    void setConfigCache(const QByteArray &cache);
 
 signals:
     void saveLogsChanged(bool enabled);

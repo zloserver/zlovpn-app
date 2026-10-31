@@ -9,8 +9,13 @@
 #define APP_MAJOR_VERSION "@APP_MAJOR_VERSION@"
 #endif
 
+#ifdef ZLOVPN_DEV_BUILD
+#define APPLICATION_NAME    "ZloVPN Dev"
+#define SERVICE_NAME        "ZloVPN Dev-service"
+#else
 #define APPLICATION_NAME    "ZloVPN"
 #define SERVICE_NAME        "ZloVPN-service"
+#endif
 #define ORGANIZATION_NAME   "com.zloserver"
 
 #endif  // VERSION_H

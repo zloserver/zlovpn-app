@@ -73,6 +73,17 @@ extension PacketTunnelProvider {
             ? NEDNSSettings(servers: dnsArray)
             : NEDNSSettings(servers: ["1.1.1.1"])
 
+            // split tunneling, "Exclude local networks" included (docs: design.md, section 8)
+            let splitTunnelRoutes = (xrayConfig.splitTunnelSites ?? []).compactMap(ipv4Route)
+            switch xrayConfig.splitTunnelType {
+            case 1 where !splitTunnelRoutes.isEmpty:
+                settings.ipv4Settings?.includedRoutes = splitTunnelRoutes
+            case 2:
+                settings.ipv4Settings?.excludedRoutes = splitTunnelRoutes
+            default:
+                break
+            }
+
             let xrayConfigData = xrayConfig.config.data(using: .utf8)
 
             guard let xrayConfigData else {
@@ -125,6 +136,25 @@ extension PacketTunnelProvider {
             completionHandler(error)
             return
         }
+    }
+
+    // "10.0.0.0/8" or "1.2.3.4" as a route; nil for IPv6 and anything that is not an IPv4 network
+    private func ipv4Route(_ site: String) -> NEIPv4Route? {
+        let parts = site.split(separator: "/", omittingEmptySubsequences: false)
+        let address = String(parts[0])
+        var parsed = in_addr()
+        guard parts.count <= 2, inet_pton(AF_INET, address, &parsed) == 1 else {
+            return nil
+        }
+
+        let prefix = parts.count == 2 ? Int(parts[1]) : 32
+        guard let prefix, (0...32).contains(prefix) else {
+            return nil
+        }
+
+        let mask: UInt32 = prefix == 0 ? 0 : UInt32.max << (32 - prefix)
+        let subnetMask = [24, 16, 8, 0].map { String((mask >> UInt32($0)) & 0xFF) }.joined(separator: ".")
+        return NEIPv4Route(destinationAddress: address, subnetMask: subnetMask)
     }
 
     func stopXray(completionHandler: () -> Void) {

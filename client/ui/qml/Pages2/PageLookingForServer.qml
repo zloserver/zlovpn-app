@@ -115,6 +115,30 @@ PageType {
                     Layout.alignment: Qt.AlignBottom
 
                     BasicButtonType {
+                        id: retryButton
+                        Layout.fillWidth: true
+
+                        text: qsTr("Try again")
+
+                        // the search state switches this page back to "Looking for server" by itself
+                        clickedFunc: function() {
+                            AuthController.findServer()
+                        }
+                    }
+
+                    BasicButtonType {
+                        id: offlineButton
+                        Layout.fillWidth: true
+                        visible: AuthController.hasCachedServers()
+
+                        text: qsTr("Connect without the ZloVPN server")
+
+                        clickedFunc: function() {
+                            AuthController.enterOfflineMode()
+                        }
+                    }
+
+                    BasicButtonType {
                         id: websiteButton
                         Layout.fillWidth: true
 
@@ -169,11 +193,6 @@ PageType {
             if (AuthController.spikeReady) {
                 PageController.goToPageHome()
             }
-        }
-
-        function onSpikeErrorOccurred() {
-            root.lookingForServer.visible = false
-            root.error.visible = true
         }
     }
 

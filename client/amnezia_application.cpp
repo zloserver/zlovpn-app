@@ -65,9 +65,10 @@ AmneziaApplication::~AmneziaApplication() {
     }
 }
 
-void AmneziaApplication::refreshManager() {
-    delete m_nam;
-    m_nam = new QNetworkAccessManager(this);
+void AmneziaApplication::resetNetworkConnections() {
+    // connections opened before the VPN went up or down use the old route and stall; drop the idle ones,
+    // requests in flight finish on their own (deleting the manager used to kill them silently)
+    m_nam->clearConnectionCache();
 }
 
 void AmneziaApplication::init() {
@@ -317,7 +318,7 @@ QString AmneziaApplication::resourcesDirPath() {
 
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
 void AmneziaApplication::startLocalServer() {
-    const QString serverName("ZloVPNInstance");
+    const QString serverName(APPLICATION_NAME "Instance");
     QLocalServer::removeServer(serverName);
 
     QLocalServer *server = new QLocalServer(this);

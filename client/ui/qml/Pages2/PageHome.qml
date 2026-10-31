@@ -80,6 +80,9 @@ PageType {
                 id: remainingBalanceHeader
 
                 Layout.alignment: Qt.AlignHCenter
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
 
                 color: AmneziaStyle.color.mutedGray
                 font.pixelSize: 14
@@ -87,10 +90,46 @@ PageType {
 
                 maximumLineCount: 2
 
-                text: AuthController.userInfo.isValid ? qsTr("Balance: ") + AuthController.userInfo.localizedTimeLeft : qsTr("...")
+                text: {
+                    if (!AuthController.userInfo.isValid)
+                        return AuthController.offlineMode ? "" : qsTr("...")
+                    // without the API this is the last known balance, so say when it was known
+                    return AuthController.offlineMode
+                            ? qsTr("Balance on %1: %2").arg(AuthController.offlineDataDate).arg(AuthController.userInfo.localizedTimeLeft)
+                            : qsTr("Balance: ") + AuthController.userInfo.localizedTimeLeft
+                }
                 horizontalAlignment: Qt.AlignHCenter
 
                 KeyNavigation.tab: tabBar
+            }
+
+            RowLayout {
+                id: offlineBanner
+                visible: AuthController.offlineMode
+
+                Layout.fillWidth: true
+                Layout.leftMargin: 16
+                Layout.rightMargin: 16
+                Layout.topMargin: 8
+                spacing: 8
+
+                WarningType {
+                    Layout.fillWidth: true
+
+                    iconPath: "qrc:/images/controls/alert-circle.svg"
+                    imageColor: AmneziaStyle.color.goldenApricot
+                    textString: qsTr("No connection to the ZloVPN server, using saved settings")
+                }
+
+                ImageButtonType {
+                    implicitWidth: 40
+                    implicitHeight: 40
+
+                    image: "qrc:/images/controls/refresh-cw.svg"
+                    imageColor: AmneziaStyle.color.goldenApricot
+
+                    onClicked: AuthController.findServer()
+                }
             }
 
             ConnectButton {

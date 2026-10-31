@@ -4,6 +4,8 @@
 #include <QEventLoop>
 #include <QFile>
 #include <QHostInfo>
+#include <QJsonArray>
+#include <QJsonDocument>
 #include <QJsonObject>
 
 #include <configurators/cloak_configurator.h>
@@ -26,7 +28,13 @@
 #include "platforms/ios/ios_controller.h"
 #endif
 
+#ifdef Q_OS_MACOS
+#include <QThread>
+#include "core/controllers/firstSetupController.h"
+#endif
+
 #include "core/networkUtilities.h"
+#include "core/splitTunnelPolicy.h"
 #include "vpnconnection.h"
 
 VpnConnection::VpnConnection(std::shared_ptr<Settings> settings, QObject *parent) :
@@ -70,22 +78,32 @@ void VpnConnection::onConnectionStateChanged(Vpn::ConnectionState state) {
 
                 IpcClient::Interface()->routeAddList(m_vpnProtocol->vpnGateway(), QStringList() << dns1 << dns2, false);
 
-                if (m_settings->isSitesSplitTunnelingEnabled()) {
+                // the effective split tunneling of this connection: the user's sites plus "Exclude local networks"
+                const auto splitTunnelType =
+                        static_cast<Settings::RouteMode>(m_vpnConfiguration.value(config_key::splitTunnelType).toInt());
+                const bool userSitesExcluded = m_settings->isSitesSplitTunnelingEnabled()
+                        && m_settings->routeMode() == Settings::VpnAllExceptSites;
+
+                if (splitTunnelType != Settings::VpnAllSites) {
                     IpcClient::Interface()->routeDeleteList(m_vpnProtocol->vpnGateway(), QStringList() << "0.0.0.0");
                     // qDebug() << "VpnConnection::onConnectionStateChanged :: adding custom routes, count:" <<
                     // forwardIps.size();
-                    if (m_settings->routeMode() == Settings::VpnOnlyForwardSites) {
+                    if (splitTunnelType == Settings::VpnOnlyForwardSites) {
                         QTimer::singleShot(1000, m_vpnProtocol.data(), [this]() {
-                            addSitesRoutes(m_vpnProtocol->vpnGateway(), m_settings->routeMode());
+                            addSitesRoutes(m_vpnProtocol->vpnGateway(), Settings::VpnOnlyForwardSites);
                         });
-                    } else if (m_settings->routeMode() == Settings::VpnAllExceptSites) {
+                    } else if (splitTunnelType == Settings::VpnAllExceptSites) {
                         IpcClient::Interface()->routeAddList(m_vpnProtocol->vpnGateway(), QStringList() << "0.0.0.0/1", false);
                         IpcClient::Interface()->routeAddList(m_vpnProtocol->vpnGateway(), QStringList()
                                                                                                   << "128.0.0.0/1", false);
 
                         IpcClient::Interface()->routeAddList(m_vpnProtocol->routeGateway(),
                                                              QStringList() << remoteAddress(), true);
-                        addSitesRoutes(m_vpnProtocol->routeGateway(), m_settings->routeMode());
+                        if (userSitesExcluded)
+                            addSitesRoutes(m_vpnProtocol->routeGateway(), Settings::VpnAllExceptSites);
+                        if (m_settings->isExcludeLocalNetworks())
+                            IpcClient::Interface()->routeAddList(m_vpnProtocol->routeGateway(),
+                                                                 SplitTunnelPolicy::localUnicastNetworks(), true);
                     }
                 }
             }
@@ -212,7 +230,17 @@ void VpnConnection::connectToVpn(int serverIndex, const ServerCredentials &crede
                         .arg(ContainerProps::containerToString(container))
              << m_settings->routeMode();
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
-    IpcClient::Reinitialize(this);
+    if (!IpcClient::Reinitialize(this)) {
+#ifdef Q_OS_MACOS
+        // the service quits when its launcher is restarted, ask the launcher for a new one
+        qWarning() << "VPN service is not reachable, asking the launcher to start it";
+        if (FirstSetupController::startService()) {
+            for (int attempt = 0; attempt < 5 && !IpcClient::Reinitialize(this); attempt++) {
+                QThread::msleep(500);
+            }
+        }
+#endif
+    }
 #endif
 
     m_remoteAddress = NetworkUtilities::getIPAddress(credentials.hostName);
@@ -230,6 +258,18 @@ void VpnConnection::connectToVpn(int serverIndex, const ServerCredentials &crede
 #endif
 
     appendSplitTunnelingConfig();
+
+#ifdef ZLOVPN_DEV_BUILD
+    // Local testing of the connection flow without a tunnel: ZLOVPN_DEV_FAKE_VPN=ok|fail reports the result at once
+    const QString fakeVpn = qEnvironmentVariable("ZLOVPN_DEV_FAKE_VPN");
+    if (!fakeVpn.isEmpty()) {
+        qInfo().noquote() << "ZLOVPN_DEV_FAKE_VPN:" << fakeVpn << "for" << credentials.hostName << "split tunneling"
+                          << m_vpnConfiguration.value(config_key::splitTunnelType).toInt()
+                          << QJsonDocument(m_vpnConfiguration.value(config_key::splitTunnelSites).toArray()).toJson(QJsonDocument::Compact);
+        emit connectionStateChanged(fakeVpn == "ok" ? Vpn::ConnectionState::Connected : Vpn::ConnectionState::Error, false);
+        return;
+    }
+#endif
 
 #if !defined(Q_OS_ANDROID) && !defined(Q_OS_IOS)
     m_vpnProtocol.reset(VpnProtocol::factory(container, m_vpnConfiguration));
@@ -338,6 +378,14 @@ void VpnConnection::appendSplitTunnelingConfig() {
                 sitesJsonArray.append(m_vpnConfiguration.value(config_key::dns2).toString());
             }
         }
+    }
+
+    // "Exclude local networks": they bypass the VPN like "all except" sites; with "only listed sites" they already do
+    if (m_settings->isExcludeLocalNetworks() && allowSiteBasedSplitTunneling
+        && routeMode != Settings::VpnOnlyForwardSites) {
+        routeMode = Settings::VpnAllExceptSites;
+        for (const QString &network : SplitTunnelPolicy::localNetworks())
+            sitesJsonArray.append(network);
     }
 
     m_vpnConfiguration.insert(config_key::splitTunnelType, routeMode);

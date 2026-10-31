@@ -530,6 +530,9 @@ bool IosController::setupXray()
     finalConfig.insert(config_key::dns1, m_rawConfig[config_key::dns1].toString());
     finalConfig.insert(config_key::dns2, m_rawConfig[config_key::dns2].toString());
     finalConfig.insert(config_key::config, xrayConfigStr);
+    // split tunneling of this connection, "Exclude local networks" included (docs: design.md, section 8)
+    finalConfig.insert(config_key::splitTunnelType, m_rawConfig[config_key::splitTunnelType]);
+    finalConfig.insert(config_key::splitTunnelSites, m_rawConfig[config_key::splitTunnelSites]);
 
     QJsonDocument finalConfigDoc(finalConfig);
     QString finalConfigStr(finalConfigDoc.toJson(QJsonDocument::Compact));

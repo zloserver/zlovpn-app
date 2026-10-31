@@ -79,6 +79,9 @@ qt_add_executable(${PROJECT} MANUAL_FINALIZATION
         errorParser.h errorParser.cpp
         core/controllers/firstSetupController.h core/controllers/firstSetupController.cpp
         core/controllers/autoUpdateController.h core/controllers/autoUpdateController.cpp
+        core/api/apiDiscovery.h core/api/apiDiscovery.cpp
+        core/configCache.h core/configCache.cpp
+        core/splitTunnelPolicy.h core/splitTunnelPolicy.cpp
 )
 
 if (APPLE AND NOT IOS)
