@@ -153,6 +153,34 @@ bool IpcServer::updateResolvers(const QString &ifname, const QList<QHostAddress>
     return Router::updateResolvers(ifname, resolvers);
 }
 
+bool IpcServer::setLocalDomainsResolver(bool enabled) {
+    const QList<QHostAddress> servers = Router::setLocalDomainsResolver(enabled);
+    const QStringList previous = m_localDomainsDns;
+    m_localDomainsDns.clear();
+    for (const QHostAddress &server : servers)
+        m_localDomainsDns.append(server.toString());
+
+    // the kill switch blocks DNS to anything but the tunnel DNS, let the router's DNS through
+#ifdef Q_OS_MACOS
+    // only the router's addresses: the table is filled by IpcServer::enableKillSwitch (Xray) or by
+    // WireguardUtilsMacos (WireGuard), whichever set up the kill switch
+    const QString anchor = QStringLiteral("310.blockDNS");
+    if ((!previous.isEmpty() || !m_localDomainsDns.isEmpty()) && MacOSFirewall::isAnchorEnabled(anchor)) {
+        if (!previous.isEmpty())
+            MacOSFirewall::deleteFromAnchorTable(anchor, QStringLiteral("dnsaddr"), previous);
+        if (!m_localDomainsDns.isEmpty())
+            MacOSFirewall::addToAnchorTable(anchor, QStringLiteral("dnsaddr"), m_localDomainsDns);
+    }
+#else
+    Q_UNUSED(previous);
+#endif
+#ifdef Q_OS_WIN
+    WindowsFirewall::instance()->allowLocalDns(servers);
+#endif
+
+    return enabled ? !servers.isEmpty() : true;
+}
+
 void IpcServer::StartRoutingIpv6() { Router::StartRoutingIpv6(); }
 void IpcServer::StopRoutingIpv6() { Router::StopRoutingIpv6(); }
 
@@ -249,7 +277,9 @@ bool IpcServer::enableKillSwitch(const QJsonObject &configStr, int vpnAdapterInd
     dnsServers.append(configStr.value(amnezia::config_key::dns1).toString());
     dnsServers.append(configStr.value(amnezia::config_key::dns2).toString());
     MacOSFirewall::setAnchorEnabled(QStringLiteral("310.blockDNS"), true);
-    MacOSFirewall::setAnchorTable(QStringLiteral("310.blockDNS"), true, QStringLiteral("dnsaddr"), dnsServers);
+    // with the local domains resolver already set the router's DNS stays allowed
+    MacOSFirewall::setAnchorTable(QStringLiteral("310.blockDNS"), true, QStringLiteral("dnsaddr"),
+                                  dnsServers + m_localDomainsDns);
 #endif
 
     return true;
@@ -342,5 +372,6 @@ void IpcServer::amneziaKilled() {
 #if defined(Q_OS_WIN) || defined(Q_OS_LINUX) || defined(Q_OS_MACOS)
     IpcServer::disableKillSwitch();
     IpcServer::StartRoutingIpv6();
+    IpcServer::setLocalDomainsResolver(false);
 #endif
 }

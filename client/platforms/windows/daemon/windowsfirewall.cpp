@@ -46,6 +46,9 @@ namespace {
     constexpr uint8_t MED_WEIGHT = 7;
     constexpr uint8_t HIGH_WEIGHT = 13;
     constexpr uint8_t MAX_WEIGHT = 15;
+
+    // m_peerRules key of the filters that let DNS to the router through
+    const QString kLocalDnsPeer = QStringLiteral("localDns");
 } // namespace
 
 WindowsFirewall *WindowsFirewall::instance() {
@@ -240,6 +243,37 @@ bool WindowsFirewall::enablePeerTraffic(const InterfaceConfig &config) {
     }
 
     cleanup.dismiss();
+    return true;
+}
+
+bool WindowsFirewall::allowLocalDns(const QList<QHostAddress> &servers) {
+    if (m_peerRules.contains(kLocalDnsPeer)) {
+        disablePeerTraffic(kLocalDnsPeer);
+    }
+    // without the kill switch nothing blocks DNS
+    if (servers.isEmpty() || m_activeRules.isEmpty()) {
+        return true;
+    }
+
+    auto result = FwpmTransactionBegin(m_sessionHandle, NULL);
+    if (result != ERROR_SUCCESS) {
+        logger.error() << "FwpmTransactionBegin0 failed. Return value:.\n" << result;
+        return false;
+    }
+    for (const QHostAddress &server: servers) {
+        // the same weight as "Allow DNS-Server", above the kill switch's "Block all DNS"
+        if (!allowTrafficTo(server, 53, HIGH_WEIGHT, "Allow local DNS", kLocalDnsPeer)) {
+            FwpmTransactionAbort0(m_sessionHandle);
+            m_peerRules.remove(kLocalDnsPeer);
+            return false;
+        }
+    }
+    result = FwpmTransactionCommit0(m_sessionHandle);
+    if (result != ERROR_SUCCESS) {
+        logger.error() << "FwpmTransactionCommit0 failed. Return value:.\n" << result;
+        m_peerRules.remove(kLocalDnsPeer);
+        return false;
+    }
     return true;
 }
 

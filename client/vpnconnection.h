@@ -95,6 +95,7 @@ private:
 
     void appendSplitTunnelingConfig();
     void appendKillSwitchConfig();
+    void setLocalDomainsResolver(bool connected);
 };
 
 #endif // VPNCONNECTION_H

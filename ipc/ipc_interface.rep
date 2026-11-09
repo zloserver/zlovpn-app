@@ -33,6 +33,8 @@ class IpcInterface
     SLOT( bool enablePeerTraffic( const QJsonObject &configStr) );
     SLOT( bool enableKillSwitch( const QJsonObject &excludeAddr, int vpnAdapterIndex) );
     SLOT( bool updateResolvers(const QString& ifname, const QList<QHostAddress>& resolvers) );
+    // "Exclude local networks": local domains are resolved by the DNS of the main interface; false removes the rule
+    SLOT( bool setLocalDomainsResolver(bool enabled) );
 
     SLOT( void connectionEstablished(const QUuid& uniqueId) );
     SLOT( void connectionClose(const QUuid& uniqueId) );

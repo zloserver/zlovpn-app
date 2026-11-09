@@ -48,6 +48,7 @@ public:
 
     void suspendWcmSvc(bool suspend);
     bool updateResolvers(const QString &ifname, const QList<QHostAddress> &resolvers);
+    QList<QHostAddress> setLocalDomainsResolver(bool enabled);
 
 private:
     RouterWin(RouterWin const &) = delete;

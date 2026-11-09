@@ -218,6 +218,16 @@ void MacOSFirewall::setAnchorTable(const QString &anchor, bool enabled, const QS
         execute(QStringLiteral("pfctl -q -a '%1/%2' -t '%3' -T kill").arg(kRootAnchor, anchor, table), true);
 }
 
+void MacOSFirewall::addToAnchorTable(const QString &anchor, const QString &table, const QStringList &items)
+{
+    execute(QStringLiteral("pfctl -q -a '%1/%2' -t '%3' -T add %4").arg(kRootAnchor, anchor, table, items.join(' ')));
+}
+
+void MacOSFirewall::deleteFromAnchorTable(const QString &anchor, const QString &table, const QStringList &items)
+{
+    execute(QStringLiteral("pfctl -q -a '%1/%2' -t '%3' -T delete %4").arg(kRootAnchor, anchor, table, items.join(' ')), true);
+}
+
 void MacOSFirewall::setAnchorWithRules(const QString &anchor, bool enabled, const QStringList &ruleList)
 {
     if (!enabled)

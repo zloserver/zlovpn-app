@@ -35,6 +35,9 @@ class WindowsFirewall final : public QObject {
   bool enablePeerTraffic(const InterfaceConfig& config);
   bool disablePeerTraffic(const QString& pubkey);
   bool disableKillSwitch();
+  // "Exclude local networks": DNS to the router passes the kill switch, which blocks port 53. Replaces the previous
+  // servers, an empty list removes them
+  bool allowLocalDns(const QList<QHostAddress>& servers);
 
  private:
   WindowsFirewall(QObject* parent);

@@ -1,6 +1,8 @@
 #ifndef SPLITTUNNELPOLICY_H
 #define SPLITTUNNELPOLICY_H
 
+#include <QHostAddress>
+#include <QList>
 #include <QStringList>
 
 // "Exclude local networks" (docs: design.md, section 8). The networks are merged into the "all except" split
@@ -15,6 +17,15 @@ namespace SplitTunnelPolicy {
     // Unicast part of localNetworks(), for routes through the default gateway on desktop
     // (multicast and broadcast are not routed through a gateway)
     const QStringList &localUnicastNetworks();
+
+    // Local names the router's DNS knows (router.lan, nas.home.arpa). On desktop they are resolved by the DNS of the
+    // main interface instead of the tunnel DNS (the service, Router::setLocalDomainsResolver). .local needs nothing:
+    // mDNS goes over the local network anyway.
+    const QStringList &localDomains();
+
+    // The servers that can resolve local domains: IPv4 ones in localUnicastNetworks(). A public resolver (1.1.1.1
+    // handed out by a router, the ISP DNS) doesn't know local names, and the names would leak past the tunnel.
+    QList<QHostAddress> localDnsServers(const QList<QHostAddress> &servers);
 
 } // namespace SplitTunnelPolicy
 

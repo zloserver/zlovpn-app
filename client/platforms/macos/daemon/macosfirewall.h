@@ -83,6 +83,9 @@ public:
     static bool isAnchorEnabled(const QString &anchor);
     static void setAnchorEnabled(const QString &anchor, bool enable);
     static void setAnchorTable(const QString &anchor, bool enabled, const QString &table, const QStringList &items);
+    // add or remove some addresses, keeping the rest of the table
+    static void addToAnchorTable(const QString &anchor, const QString &table, const QStringList &items);
+    static void deleteFromAnchorTable(const QString &anchor, const QString &table, const QStringList &items);
     static void setAnchorWithRules(const QString &anchor, bool enabled, const QStringList &rules);
     static void ensureRootAnchorPriority();
     static void installRootAnchors();

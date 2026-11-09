@@ -33,6 +33,9 @@ LocalServer::LocalServer(QObject *parent) : QObject(parent), m_ipcServer(this) {
     return;
   }
 
+  // a local domains rule left by a crashed service: on Windows it is in the registry
+  Router::setLocalDomainsResolver(false);
+
   QObject::connect(
       m_server.data(), &QLocalServer::newConnection, this, [this]() {
         qDebug() << "LocalServer new connection";
@@ -87,4 +90,9 @@ LocalServer::LocalServer(QObject *parent) : QObject(parent), m_ipcServer(this) {
 #endif
 }
 
-LocalServer::~LocalServer() { qDebug() << "Local server stopped"; }
+LocalServer::~LocalServer() {
+  // the Windows service stops here; a second instance that failed to listen must not touch the rule of the first
+  if (m_server->isListening())
+    Router::setLocalDomainsResolver(false);
+  qDebug() << "Local server stopped";
+}

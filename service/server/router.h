@@ -25,6 +25,9 @@ public:
     static void StartRoutingIpv6();
     static void StopRoutingIpv6();
     static bool updateResolvers(const QString &ifname, const QList<QHostAddress> &resolvers);
+    // "Exclude local networks": SplitTunnelPolicy::localDomains() are resolved by the local DNS servers of the main
+    // interface instead of the tunnel DNS. Returns the servers in use, none when there is no rule (macOS, Windows)
+    static QList<QHostAddress> setLocalDomainsResolver(bool enabled);
 };
 
 #endif // ROUTER_H

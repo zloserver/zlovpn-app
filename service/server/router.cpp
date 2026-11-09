@@ -91,6 +91,17 @@ bool Router::updateResolvers(const QString &ifname, const QList<QHostAddress> &r
 #endif
 }
 
+QList<QHostAddress> Router::setLocalDomainsResolver(bool enabled) {
+#ifdef Q_OS_WIN
+    return RouterWin::Instance().setLocalDomainsResolver(enabled);
+#elif defined(Q_OS_MACOS)
+    return RouterMac::Instance().setLocalDomainsResolver(enabled);
+#else
+    Q_UNUSED(enabled);
+    return {};
+#endif
+}
+
 
 void Router::StopRoutingIpv6() {
 #ifdef Q_OS_WIN

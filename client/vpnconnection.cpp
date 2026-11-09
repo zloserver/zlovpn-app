@@ -106,10 +106,12 @@ void VpnConnection::onConnectionStateChanged(Vpn::ConnectionState state) {
                                                                  SplitTunnelPolicy::localUnicastNetworks(), true);
                     }
                 }
+                setLocalDomainsResolver(true);
             }
 
         } else if (state == Vpn::ConnectionState::Error) {
             IpcClient::Interface()->flushDns();
+            setLocalDomainsResolver(false);
 
             if (m_settings->isSitesSplitTunnelingEnabled()) {
                 if (m_settings->routeMode() == Settings::VpnOnlyForwardSites) {
@@ -119,6 +121,7 @@ void VpnConnection::onConnectionStateChanged(Vpn::ConnectionState state) {
         } else if (state == Vpn::ConnectionState::Connecting) {
 
         } else if (state == Vpn::ConnectionState::Disconnected) {
+            setLocalDomainsResolver(false);
         }
     }
 #endif
@@ -211,6 +214,21 @@ void VpnConnection::flushDns() {
 #endif
 }
 
+// "Exclude local networks" on desktop: local names (router.lan, nas.home.arpa) go to the router's DNS instead of the
+// tunnel DNS. Set whenever the switch keeps local networks out of the tunnel, i.e. the connection splits traffic.
+void VpnConnection::setLocalDomainsResolver(bool connected) {
+#ifdef AMNEZIA_DESKTOP
+    const bool enabled = connected && m_settings->isExcludeLocalNetworks()
+            && m_vpnConfiguration.value(config_key::splitTunnelType).toInt() != Settings::VpnAllSites;
+    if (connected)
+        qInfo() << "Local domains via the router's DNS:" << enabled;
+    if (IpcClient::Interface())
+        IpcClient::Interface()->setLocalDomainsResolver(enabled);
+#else
+    Q_UNUSED(connected);
+#endif
+}
+
 ErrorCode VpnConnection::lastError() const {
 #ifdef Q_OS_ANDROID
     return ErrorCode::AndroidError;
@@ -266,6 +284,8 @@ void VpnConnection::connectToVpn(int serverIndex, const ServerCredentials &crede
         qInfo().noquote() << "ZLOVPN_DEV_FAKE_VPN:" << fakeVpn << "for" << credentials.hostName << "split tunneling"
                           << m_vpnConfiguration.value(config_key::splitTunnelType).toInt()
                           << QJsonDocument(m_vpnConfiguration.value(config_key::splitTunnelSites).toArray()).toJson(QJsonDocument::Compact);
+        // with the dev service running (sudo) the local domains rule is really set: a check without a tunnel
+        setLocalDomainsResolver(fakeVpn == "ok");
         emit connectionStateChanged(fakeVpn == "ok" ? Vpn::ConnectionState::Connected : Vpn::ConnectionState::Error, false);
         return;
     }
@@ -439,6 +459,8 @@ void VpnConnection::disconnectFromVpn() {
     QString proto = m_settings->defaultContainerName(m_settings->defaultServerIndex());
     if (IpcClient::Interface()) {
         IpcClient::Interface()->flushDns();
+        // before the wait below, so that it reaches the service even when the app is quitting
+        setLocalDomainsResolver(false);
 
         // delete cached routes
         QRemoteObjectPendingReply<bool> response = IpcClient::Interface()->clearSavedRoutes();

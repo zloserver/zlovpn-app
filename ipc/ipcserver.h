@@ -39,6 +39,7 @@ public:
     virtual bool enableKillSwitch(const QJsonObject &excludeAddr, int vpnAdapterIndex) override;
     virtual bool disableKillSwitch() override;
     virtual bool updateResolvers(const QString &ifname, const QList<QHostAddress> &resolvers) override;
+    virtual bool setLocalDomainsResolver(bool enabled) override;
 
     virtual void connectionEstablished(const QUuid &uniqueId) override;
     virtual void connectionClose(const QUuid &uniqueId) override;
@@ -48,6 +49,10 @@ public:
 
 private:
     int m_localpid = 0;
+
+    // the router's DNS while local domains are resolved by it: the macOS kill switch lets it through
+    // (amn.310.blockDNS.conf)
+    QStringList m_localDomainsDns;
 
     struct ProcessDescriptor {
         ProcessDescriptor(QObject *parent = nullptr) {

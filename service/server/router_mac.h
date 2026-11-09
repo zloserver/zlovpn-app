@@ -33,7 +33,8 @@ public:
     bool createTun(const QString &dev, const QString &subnet);
     bool deleteTun(const QString &dev);
     bool updateResolvers(const QString& ifname, const QList<QHostAddress>& resolvers);
-    
+    QList<QHostAddress> setLocalDomainsResolver(bool enabled);
+
 public slots:
 
 private:
@@ -42,7 +43,10 @@ private:
     RouterMac& operator= (RouterMac const&) = delete;
 
     QList<Route> m_addedRoutes;
-    DnsUtilsMacos *m_dnsUtil;    
+    DnsUtilsMacos *m_dnsUtil;
+
+    // the session that owns the temporary local domains key: configd drops the key when the session (the service) ends
+    SCDynamicStoreRef m_localDomainsStore = nullptr;
 };
 
 #endif // ROUTERMAC_H
