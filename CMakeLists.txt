@@ -52,6 +52,14 @@ endif ()
 
 if (APPLE AND NOT IOS)
     set(CMAKE_OSX_ARCHITECTURES "x86_64")
+
+    # Older Qt releases request AGL even when the macOS SDK no longer has it.
+    find_package(Qt6 REQUIRED COMPONENTS Gui)
+    if (TARGET WrapOpenGL::WrapOpenGL)
+        get_target_property(opengl_libraries WrapOpenGL::WrapOpenGL INTERFACE_LINK_LIBRARIES)
+        list(REMOVE_ITEM opengl_libraries "-framework AGL" "${WrapOpenGL_AGL}")
+        set_property(TARGET WrapOpenGL::WrapOpenGL PROPERTY INTERFACE_LINK_LIBRARIES "${opengl_libraries}")
+    endif ()
 endif ()
 
 
