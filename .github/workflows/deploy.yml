@@ -333,7 +333,11 @@ jobs:
         shell: bash
         run: |
           log="$RUNNER_TEMP/macos-build.log"
-          bash deploy/build_macos.sh 2>&1 | tee "$log" || {
+          build_args=()
+          if [[ "$GITHUB_REF_TYPE" != tag ]]; then
+            build_args=(-u)
+          fi
+          bash deploy/build_macos.sh "${build_args[@]}" 2>&1 | tee "$log" || {
             status=$?
             awk '/(^|[[:space:]])(fatal )?error: |^ld: .*not found|^Undefined symbols for architecture/ {
               gsub(/%/, "%25")

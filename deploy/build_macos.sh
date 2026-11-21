@@ -3,10 +3,12 @@ echo "Build script started ..."
 
 set -o errexit -o nounset
 
-while getopts n flag
+SIGN_BUILD=1
+while getopts nu flag
 do
     case "${flag}" in
         n) NOTARIZE_APP=1;;
+        u) SIGN_BUILD=0;;
     esac
 done
 
@@ -52,7 +54,7 @@ clang -v
 KEYCHAIN=zlovpn.build.macos.keychain
 KEYCHAIN_FILE=$HOME/Library/Keychains/${KEYCHAIN}-db
 
-if [ "${MACOS_SIGNING_CERT_BASE64+x}" ]; then
+if [ "$SIGN_BUILD" = 1 ] && [ "${MACOS_SIGNING_CERT_BASE64+x}" ]; then
   echo "Import certificate"
 
   SIGNING_CERT_P12=$BUILD_DIR/signing-cert.p12
@@ -83,7 +85,11 @@ cd $BUILD_DIR
 
 MACOS_SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
 "$QT_BIN_DIR/qt-cmake" -S "$PROJECT_DIR" -B "$BUILD_DIR" -GXcode -DCMAKE_OSX_SYSROOT="$MACOS_SDK_PATH"
-cmake --build . --config ${BUILD_CONFIG}
+if [ "$SIGN_BUILD" = 1 ]; then
+  cmake --build . --config "$BUILD_CONFIG"
+else
+  cmake --build . --config "$BUILD_CONFIG" -- CODE_SIGNING_ALLOWED=NO
+fi
 
 # Build and run tests here
 
@@ -112,7 +118,7 @@ $DMG_FILENAME $TMP_DIR/
 rm -rf $TMP_DIR
 
 # Sign
-if [ "${MACOS_SIGNING_CERT_BASE64+x}" ]; then
+if [ "$SIGN_BUILD" = 1 ] && [ "${MACOS_SIGNING_CERT_BASE64+x}" ]; then
   echo "Signing ..."
 
   codesign -s $CODESIGN_ID --timestamp -i $APP_DOMAIN $DMG_FILENAME
