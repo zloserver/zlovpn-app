@@ -330,8 +330,19 @@ jobs:
           echo "${{ secrets.APPSTORE_API_KEY_BASE64 }}" | base64 --decode > private_keys/AuthKey_${{ secrets.APPSTORE_API_KEY_NAME }}.p8
 
       - name: "Build project"
+        shell: bash
         run: |
-          bash deploy/build_macos.sh
+          log="$RUNNER_TEMP/macos-build.log"
+          bash deploy/build_macos.sh 2>&1 | tee "$log" || {
+            status=$?
+            awk '/(^|[[:space:]])(fatal )?error: |^ld: .*not found|^Undefined symbols for architecture/ {
+              gsub(/%/, "%25")
+              gsub(/\r/, "%0D")
+              print "::error::" $0
+              if (++errors == 4) exit
+            }' "$log"
+            exit "$status"
+          }
         env:
           MACOS_SIGNING_CERT_BASE64: ${{ secrets.MACOS_SIGNING_CERT_BASE64 }}
           MACOS_SIGNING_CERT_PASSWORD: ${{ secrets.MACOS_SIGNING_CERT_PASSWORD }}
