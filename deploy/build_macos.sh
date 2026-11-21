@@ -81,7 +81,8 @@ fi
 echo "Building App..."
 cd $BUILD_DIR
 
-$QT_BIN_DIR/qt-cmake -S $PROJECT_DIR -B $BUILD_DIR -GXcode
+MACOS_SDK_PATH=$(xcrun --sdk macosx --show-sdk-path)
+"$QT_BIN_DIR/qt-cmake" -S "$PROJECT_DIR" -B "$BUILD_DIR" -GXcode -DCMAKE_OSX_SYSROOT="$MACOS_SDK_PATH"
 cmake --build . --config ${BUILD_CONFIG}
 
 # Build and run tests here
